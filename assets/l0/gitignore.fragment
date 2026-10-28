@@ -1,0 +1,7 @@
+# paddock:fixed — 대상 .gitignore 에 덧붙이는 조각
+# 스킬 로컬 상태 — config.example.json 만 커밋
+.agents/skills/*/config.json
+.agents/skills/*/state/
+
+# 에이전트 worktree
+{{WORKTREE_DIR}}/

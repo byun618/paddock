@@ -1,0 +1,2 @@
+<!-- paddock:fixed -->
+@AGENTS.md

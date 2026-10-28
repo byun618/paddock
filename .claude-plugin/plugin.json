@@ -1,0 +1,20 @@
+{
+  "name": "paddock",
+  "version": "0.1.0",
+  "description": "AI 작업 흐름(규칙·역할·스킬·게이트·harness 매핑·출고)을 프로젝트에 맞게 설계해 깔아 주는 플러그인. 고정 뼈대는 자산으로 그대로 복사하고, 프로젝트별 설계는 LLM 이 코드베이스를 보고 쓴다.",
+  "author": {
+    "name": "byun618",
+    "url": "https://github.com/byun618"
+  },
+  "homepage": "https://github.com/byun618/paddock",
+  "repository": "https://github.com/byun618/paddock",
+  "license": "MIT",
+  "keywords": [
+    "agent-workflow",
+    "agents-md",
+    "scaffolding",
+    "code-review",
+    "claude-code-plugin",
+    "codex"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "name": "paddock",
+  "owner": {
+    "name": "byun618",
+    "url": "https://github.com/byun618"
+  },
+  "metadata": {
+    "description": "AI 작업 흐름을 프로젝트에 맞게 설계해 깔아 주는 paddock 플러그인의 마켓플레이스"
+  },
+  "plugins": [
+    {
+      "name": "paddock",
+      "source": "./",
+      "description": "AI 작업 흐름을 프로젝트에 맞게 설계해 깔아 주는 플러그인"
+    }
+  ]
+}
