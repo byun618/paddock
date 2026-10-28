@@ -1,0 +1,94 @@
+#!/usr/bin/env bash
+# paddock:fixed
+# paddock 을 들인 대상 레포를 검사한다. 사용법: paddock-check [<대상 레포>] [--require-filled]
+#   1 config   — .paddock/config.sh 를 읽을 수 있고 PADDOCK_VERSION 이 있다
+#   2 manifest — .paddock/manifest.tsv 의 항목이 전부 있다 (파일·폴더·심링크 대상까지)
+#   3 변수     — paddock 이 깐 파일에 렌더 안 된 {{VAR}} 가 없다
+#   4 슬롯     — paddock:design 구간이 짝을 이룬다. --require-filled 면 주석만 있는 빈 슬롯도 실패
+#   5 drift    — 고정 파일(설계 슬롯 밖 포함)이 렌더 때와 같다
+#   6 포인터   — .codex/agents/*.toml 이 가리키는 .agents/agents/<역할>.md 가 있다
+#   7 harness  — l2 를 켰으면 capability-check names·shape 통과 (node 없으면 공백으로 보고)
+# 종료코드: 0 통과 · 1 하나 이상 실패 · 2 사용법
+set -u
+target=. filled=0
+for a in "$@"; do case "$a" in --require-filled) filled=1 ;; -*) echo "모르는 인자 $a" >&2; exit 2 ;; *) target=$a ;; esac; done
+cd "$target" 2>/dev/null || { echo "대상이 없다: $target" >&2; exit 2; }
+fail=0
+bad() { echo "  ✗ $*"; fail=1; }
+sha() { if command -v shasum >/dev/null 2>&1; then shasum -a 256 | cut -c1-64; else sha256sum | cut -c1-64; fi; }
+TAB=$(printf '\t')
+M=.paddock/manifest.tsv
+
+echo "1 config"
+if [ -f .paddock/config.sh ] && ( . .paddock/config.sh && [ -n "${PADDOCK_VERSION:-}" ] ); then
+  PADDOCK_MODULES=$( . .paddock/config.sh; echo "${PADDOCK_MODULES:-}" )
+  echo "  ✓ PADDOCK_VERSION=$( . .paddock/config.sh; echo "$PADDOCK_VERSION" ) · 모듈: ${PADDOCK_MODULES:-없음}"
+else bad ".paddock/config.sh 가 없거나 PADDOCK_VERSION 이 비었다"; PADDOCK_MODULES=""; fi
+[ -f "$M" ] || { bad "$M 이 없다 — paddock-render apply 를 거치지 않은 레포"; echo "실패"; exit 1; }
+
+entries() { grep -v '^#' "$M" | sed '/^$/d'; }
+files() { entries | while IFS="$TAB" read -r rel kind h; do case "$kind" in fixed|seed|managed) [ "$rel" = gitignore.fragment ] || echo "$rel" ;; esac; done; }
+
+echo "2 manifest"
+n=0; while IFS="$TAB" read -r rel kind h; do
+  n=$((n+1))
+  case "$kind" in
+    dir) [ -d "$rel" ] || bad "폴더 없음: $rel" ;;
+    link) if [ ! -L "$rel" ]; then bad "심링크 없음: $rel"; elif [ "$(readlink "$rel")" != "$h" ]; then bad "심링크가 다른 곳을 가리킴: $rel → $(readlink "$rel")"; elif [ ! -e "$rel" ]; then bad "심링크가 풀리지 않음: $rel"; fi ;;
+    *) [ "$rel" = gitignore.fragment ] || [ -f "$rel" ] || bad "파일 없음: $rel" ;;
+  esac
+done < <(entries)
+[ "$fail" = 0 ] && echo "  ✓ 항목 ${n}개"
+
+echo "3 변수"
+left=$(files | while read -r f; do [ -f "$f" ] && grep -nHE '\{\{[A-Z][A-Z0-9_]*\}\}' "$f"; done)
+[ -z "$left" ] && echo "  ✓ 렌더 안 된 변수 0" || { echo "$left" | while read -r l; do echo "  ✗ $l"; done; fail=1; }
+
+echo "4 슬롯"
+slot_out=$(files | while read -r f; do [ -f "$f" ] && awk -v f="$f" -v filled="$filled" '
+  /<!-- paddock:design [^ ]+ -->/ { if (open) printf "%s:%d 슬롯이 닫히기 전에 다시 열림\n", f, NR; open = 1; id = $0; sub(/.*paddock:design /, "", id); sub(/ -->.*/, "", id); body = ""; incomment = 0; next }
+  /<!-- \/paddock:design -->/ { if (!open) printf "%s:%d 열리지 않은 슬롯을 닫음\n", f, NR; else if (filled && body == "") printf "%s 슬롯 %s 이 비었다(주석뿐)\n", f, id; open = 0; next }
+  open {
+    line = $0
+    # 주석(여러 줄 포함)을 걷어 낸 뒤에도 글자가 남으면 채운 것으로 본다
+    while (line != "") {
+      if (incomment) { e = index(line, "-->"); if (!e) { line = ""; break } line = substr(line, e + 3); incomment = 0 }
+      s = index(line, "<!--"); if (!s) { body = body line; break }
+      body = body substr(line, 1, s - 1); line = substr(line, s + 4); incomment = 1
+    }
+    gsub(/[ \t]/, "", body)
+  }
+  END { if (open) printf "%s 끝까지 슬롯이 안 닫힘\n", f }' "$f"; done)
+[ -z "$slot_out" ] && echo "  ✓ 슬롯 짝$( [ "$filled" = 1 ] && echo '·채움') 이상 없음" || { echo "$slot_out" | while read -r l; do echo "  ✗ $l"; done; fail=1; }
+
+echo "5 drift"
+drift=$(entries | while IFS="$TAB" read -r rel kind h; do
+  [ -f "$rel" ] || continue
+  case "$kind" in
+    (fixed) [ "$rel" = gitignore.fragment ] && continue; [ "$(sha < "$rel")" = "$h" ] || echo "$rel" ;;
+    (managed) [ "$(awk '/<!-- paddock:design /{print; skip=1; next} /<!-- \/paddock:design -->/{skip=0} !skip' "$rel" | sha)" = "$h" ] || echo "$rel (설계 슬롯 밖)" ;;
+  esac
+done)
+[ -z "$drift" ] && echo "  ✓ 고정 부분이 렌더 때와 같다" || { echo "$drift" | while read -r l; do echo "  ✗ 고정 부분이 바뀜: $l — 고칠 것은 paddock 레포로"; done; fail=1; }
+
+echo "6 포인터"
+ptr_bad=""; ptr_n=0
+for t in .codex/agents/*.toml; do
+  [ -e "$t" ] || continue; ptr_n=$((ptr_n+1))
+  role_md=$(grep -oE '\.agents/agents/[A-Za-z0-9_-]+\.md' "$t" | head -n 1)
+  if [ -z "$role_md" ]; then ptr_bad="$ptr_bad\n  ✗ $t 이 역할 파일을 가리키지 않는다"; elif [ ! -f "$role_md" ]; then ptr_bad="$ptr_bad\n  ✗ $t → $role_md 없음"; fi
+done
+for r in .agents/agents/*.md; do [ -e "$r" ] || continue; n=$(basename "$r" .md); [ -f ".codex/agents/$n.toml" ] || ptr_bad="$ptr_bad\n  ✗ $r 에 대응하는 .codex/agents/$n.toml 없음"; done
+[ -z "$ptr_bad" ] && echo "  ✓ 포인터 ${ptr_n}개 · 역할 파일과 짝" || { printf '%b\n' "$ptr_bad" | sed '/^$/d'; fail=1; }
+
+echo "7 harness"
+case " $PADDOCK_MODULES " in
+  *" l2 "*)
+    if [ ! -f .agents/harness/capability-check.mjs ]; then bad "l2 를 켰는데 .agents/harness/capability-check.mjs 가 없다"
+    elif ! command -v node >/dev/null 2>&1; then echo "  · 공백 — node 가 없어 capability-check 를 못 돌렸다"
+    else for m in names shape; do out=$(node .agents/harness/capability-check.mjs "$m" 2>&1) && echo "  ✓ capability-check $m" || { bad "capability-check $m"; echo "$out" | sed 's/^/      /' | head -20; }; done; fi ;;
+  *) echo "  · l2 꺼짐 — 건너뜀" ;;
+esac
+
+[ "$fail" = 0 ] && echo "통과" || echo "실패"
+exit "$fail"

@@ -9,7 +9,7 @@ paddock 이 대상 레포에 복사하는 고정 뼈대다. 층·표기 규약·
 | --- | --- | --- | --- |
 | L0 기본 | `l0/` | 항상 | AGENTS.md 지도 틀, CLAUDE.md, `.agents/` 원본 + `.claude/` 심링크, `.codex/agents/`, rules 스텁, learnings·ADR 형식, gitleaks 훅 |
 | L1 작업 흐름 | `l1/` (예정) | 기본 켬 | 게이트 흐름·판정표·리뷰어·task 스킬과 스크립트 |
-| L2 harness | `l2/<도구>/` (예정) | 쓰는 도구 하나만 | 능력 계약 + 도구 매핑 |
+| L2 harness | `l2/common/` + `l2/<도구>/` (예정) | 쓰는 도구 하나만 | 능력 계약(공통) + 도구 매핑 |
 | L3 출고 | `l3/` (예정) | 선택 | release 스킬·스크립트 |
 
 `l<층>/` 은 **대상 레포 루트를 그대로 비춘다** — `l0/.agents/rules/writing.md` 는 대상의 `.agents/rules/writing.md` 가 된다.
@@ -23,11 +23,12 @@ paddock 이 대상 레포에 복사하는 고정 뼈대다. 층·표기 규약·
 | 마커가 하나도 없는 파일 | 고정과 같다 (front matter 처럼 첫 줄을 쓸 수 없는 파일) | 덮어쓴다 |
 | 첫 줄 `<!-- paddock:seed -->` | 처음 한 번만 깐다. 이후 내용은 프로젝트 소유 | 건드리지 않는다 |
 | `<!-- paddock:design <ID> -->` … `<!-- /paddock:design -->` | 설계 슬롯. adopt 가 대상 프로젝트를 보고 채운다 | 구간 안은 보존, 밖은 덮어쓴다 |
-| `<!-- paddock:module <이름> -->` … `<!-- /paddock:module -->` | 선택 모듈 구간. 이름은 `l1`·`l2`·`l3`·`bundle` 등 | 켜면 그 층의 내용으로 채우고, 끄면 구간째 뺀다 |
+| `<!-- paddock:module <이름> -->` … `<!-- /paddock:module -->` | 선택 모듈 구간. 이름은 `l1`·`l2`·`l3`·`bundle` 등 | 렌더할 때 켜면 안의 내용만 남기고(마커는 지운다), 끄면 구간째 뺀다 |
 | `{{VAR}}` | 변수. 대문자 스네이크 | 렌더할 때 값으로 바꾼다 (LLM 판단 없음) |
 
 - 마커는 중첩하지 않는다. 한 구간이 닫히기 전에 다른 구간을 열지 않는다.
-- 상위 층이 하위 층 파일에 덧붙일 자리는 빈 `paddock:module <층>` 구간으로 미리 둔다. 같은 이름의 구간이 한 파일에 여럿일 수 있다.
+- 상위 층이 하위 층 파일에 덧붙일 내용은 그 파일의 `paddock:module <층>` 구간 안에 직접 쓴다. 같은 이름의 구간이 한 파일에 여럿일 수 있다.
+  층 폴더(`l1/`…)에는 그 층이 켜졌을 때만 생기는 **파일 전체**를 둔다.
 - 설계 슬롯 ID 는 adopt 설계 항목 번호(`D1`…)다. 아래 「설계 슬롯」 표에 있어야 한다.
 
 ## 변수
@@ -60,6 +61,27 @@ paddock 이 대상 레포에 복사하는 고정 뼈대다. 층·표기 규약·
 | ID | 자리 | adopt 가 쓰는 것 |
 | --- | --- | --- |
 | `D1` | `l0/AGENTS.md` 머리 | 프로젝트 소개 2~4줄: 무엇을 만드는가, 주요 스택, 방향 문서 위치 |
+
+## 렌더·들이기·검사
+
+플러그인 `bin/` 의 도구가 한다 (세션의 Bash PATH 에 오른다). LLM 판단이 들어가지 않는다.
+
+| 도구 | 하는 일 |
+| --- | --- |
+| `paddock-render render --config <config.sh> --out <빈 폴더>` | 켠 층·모듈·변수로 대상 레포 모양의 트리를 만든다. `.paddock/config.sh` 사본과 `.paddock/manifest.tsv`(경로 · 종류 · 해시)를 같이 둔다 |
+| `paddock-render apply <렌더 폴더> <대상> [--dry-run]` | 대상에 들인다. 내용이 다른 기존 파일이 하나라도 있으면 아무것도 쓰지 않고 충돌 목록을 낸다(exit 3) |
+| `paddock-check [<대상>] [--require-filled]` | manifest 항목·남은 변수·슬롯 짝(과 채움)·고정 부분 drift·Codex 포인터·capability-check |
+
+대상의 `.paddock/config.sh` (bash 로 읽는다 — task 스크립트도 이것을 읽는다):
+
+```sh
+PADDOCK_VERSION=0.2.0
+PADDOCK_MODULES="l1 l2"        # 켠 모듈. l0 은 늘 켜짐. 층 폴더 l1·l2 도 이 이름으로 켠다
+PADDOCK_HARNESS=corral         # l2 를 켰을 때 쓰는 도구 하나 (bare · corral)
+PROJECT_NAME=…                 # 아래 「변수」 표의 값들
+```
+
+manifest 종류: `fixed` · `seed` · `managed`(설계 슬롯이 있는 파일 — 해시는 슬롯 안을 비우고 잰다) · `link` · `dir`.
 
 ## 복사 규칙
 
