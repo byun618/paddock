@@ -64,8 +64,8 @@ cmd_render() {
   local config="" out=""
   while [ $# -gt 0 ]; do
     case "$1" in
-      --config) config=${2:-}; shift 2 ;;
-      --out) out=${2:-}; shift 2 ;;
+      --config) [ $# -ge 2 ] || die "render: --config 값이 없다"; config=$2; shift 2 ;;
+      --out) [ $# -ge 2 ] || die "render: --out 값이 없다"; out=$2; shift 2 ;;
       *) die "render: 모르는 인자 $1" ;;
     esac
   done
@@ -98,6 +98,7 @@ cmd_render() {
     case "$m" in l0|l2) continue ;; esac
     [ -d "$ASSETS/$m" ] && layers="$layers $m"
   done
+  if has_word "$PADDOCK_MODULES" l2 && ! has_word "$PADDOCK_MODULES" l1; then die "render: l2 는 l1 을 전제한다 — 능력 계약이 l1 절차 문서의 능력 사용을 검사한다"; fi
   if has_word "$PADDOCK_MODULES" l2; then
     [ -n "$PADDOCK_HARNESS" ] || die "render: l2 를 켰는데 PADDOCK_HARNESS 가 비었다"
     [ -d "$ASSETS/l2/$PADDOCK_HARNESS" ] || die "render: 모르는 harness: $PADDOCK_HARNESS"
@@ -163,6 +164,8 @@ cmd_apply() {
       link) [ -L "$path" ] && { same=$((same+1)); continue; }; mkdir -p "$(dirname "$path")"; ln -s "$h" "$path"; created=$((created+1)) ;;
       *) if [ "$rel" = gitignore.fragment ]; then
            touch "$target/.gitignore"
+           # 끝 개행이 없는 기존 .gitignore 에 덧붙이면 마지막 줄과 붙는다 — 먼저 개행
+           if [ -s "$target/.gitignore" ] && [ -n "$(tail -c 1 "$target/.gitignore")" ]; then printf '\n' >> "$target/.gitignore"; fi
            grep -vE '^(#|$)' "$stage/$rel" | while IFS= read -r line; do grep -qxF "$line" "$target/.gitignore" || printf '%s\n' "$line" >> "$target/.gitignore"; done
            continue
          fi

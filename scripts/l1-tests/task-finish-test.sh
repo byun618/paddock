@@ -30,6 +30,7 @@ C6a C6a-into C6b C6c
 C7a C7b C7c C7d C7e
 C8a C8b C8c
 C9a C9b C9c
+C10a C10b C10c C10d
 P1 P2 P3 P4 P5 P6 P7"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/../.." && pwd)"
@@ -395,6 +396,20 @@ case_C9b() { CFG_MODULES="l1 l2 bundle"; setup; local t=TASK-901-t; mk_indep "$t
 case_C9c() { setup; local t=TASK-901-t; mk_indep "$t"; git -C "$WT/$t" push -q -u origin "$t" 2>/dev/null; pr 1 OPEN "$t"; mkdir -p "$WT/$t/specs"; echo r > "$WT/$t/specs/raw.txt"   # 켜면 작업 경로도 멈춘다
   run "$t"; stopped; check "사유 = specs" has "specs 에 파일"; check "작업 worktree 남음" is_wt "$WT/$t"; }
 
+# ---- 변형 worktree·원격 변형·squash 머지 (독립 리뷰 r1 지적 2·3·4) ----
+mk_task_open() { t=TASK-901-t; mk_indep "$t"; git -C "$WT/$t" push -q -u origin "$t" 2>/dev/null; pr 1 OPEN "$t"; }
+case_C10a() { setup; mk_task_open; git -C "$B" worktree add -q "$WT/$t-fix" -b "$t-fix" "$t"; echo wip > "$WT/$t-fix/wip.txt"   # -fix worktree 에 미추적 파일
+  run "$t"; stopped; check "사유 = 미커밋 변경" has "$t-fix worktree 에 미커밋 변경"; check "wip 남음" [ -f "$WT/$t-fix/wip.txt" ]; }
+case_C10b() { setup; mk_task_open; git -C "$B" branch -q "$t-fix" "$t"   # 로컬 -fix 는 조상인데 원격 -fix 에 커밋이 더 있다
+  git -C "$H" fetch -q origin; git -C "$H" checkout -q -B "$t-fix" "origin/$t"; commit_in "$H" extra; git -C "$H" push -q origin "$t-fix"; git -C "$B" fetch -q origin
+  run "$t"; stopped; check "사유 = 원격 변형" has "원격 $t-fix 가"; check "원격 -fix 남음" [ -n "$(remote_oid "$t-fix")" ]; }
+case_C10c() { setup; mk_task_open   # 로컬 없이 원격에만 있는 -fix(조상 아님) — 발견 대상이 아니라 건드리지 않는다
+  git -C "$H" fetch -q origin; git -C "$H" checkout -q -B "$t-fix" "origin/$t"; commit_in "$H" extra; git -C "$H" push -q origin "$t-fix"
+  run "$t"; check "exit 0" rc_is 0; check "원격 -fix 남음" [ -n "$(remote_oid "$t-fix")" ]; }
+case_C10d() { setup; mk_task_open   # squash 머지 — main 에 같은 내용의 새 커밋, PR MERGED
+  git -C "$H" fetch -q origin; git -C "$H" checkout -q -B main origin/main; git -C "$H" merge -q --squash "origin/$t" >/dev/null 2>&1; git -C "$H" commit -qm squash; git -C "$H" push -q origin main
+  pr 1 MERGED "$t"
+  run "$t"; stopped; check "사유 = squash 머지" has "squash·rebase 머지는 자동 정리하지 않는다"; check "로컬 작업 브랜치 남음" is_local "$t"; }
 # ---- task-pr.sh ----
 mk_specs() { # mk_specs <작업 이름> [plain] — 본체 옆 specs 폴더(기본: 산출물 레포, plain 이면 그냥 폴더) + 원고·판정문
   local d="$W/specs"

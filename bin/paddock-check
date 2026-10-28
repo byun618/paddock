@@ -4,7 +4,7 @@
 #   1 config   — .paddock/config.sh 를 읽을 수 있고 PADDOCK_VERSION 이 있다
 #   2 manifest — .paddock/manifest.tsv 의 항목이 전부 있다 (파일·폴더·심링크 대상까지)
 #   3 변수     — paddock 이 깐 파일에 렌더 안 된 {{VAR}} 가 없다
-#   4 슬롯     — paddock:design 구간이 짝을 이룬다. --require-filled 면 주석만 있는 빈 슬롯도 실패
+#   4 슬롯     — paddock:design 구간이 짝을 이룬다. --require-filled 면 주석만 있는 빈 슬롯과 .agents/defaults.md 역할 표의 빈 행도 실패
 #   5 drift    — 고정 파일(설계 슬롯 밖 포함)이 렌더 때와 같다
 #   6 포인터   — .codex/agents/*.toml 이 가리키는 .agents/agents/<역할>.md 가 있다
 #   7 harness  — l2 를 켰으면 capability-check names·shape 통과 (node 없으면 공백으로 보고)
@@ -60,6 +60,11 @@ slot_out=$(files | while read -r f; do [ -f "$f" ] && awk -v f="$f" -v filled="$
   }
   END { if (open) printf "%s 끝까지 슬롯이 안 닫힘\n", f }' "$f"; done)
 [ -z "$slot_out" ] && echo "  ✓ 슬롯 짝$( [ "$filled" = 1 ] && echo '·채움') 이상 없음" || { echo "$slot_out" | while read -r l; do echo "  ✗ $l"; done; fail=1; }
+
+if [ "$filled" = 1 ] && [ -f .agents/defaults.md ]; then
+  empty_roles=$(grep -nE '^\|[^|]+\|( *\|){4} *$' .agents/defaults.md | cut -d: -f1 | tr '\n' ' ')
+  [ -z "$empty_roles" ] && echo "  ✓ defaults.md 역할 표 채움" || { echo "  ✗ .agents/defaults.md 역할 표에 빈 행 (줄 $empty_roles) — 채우거나 「해당 없음」"; fail=1; }
+fi
 
 echo "5 drift"
 drift=$(entries | while IFS="$TAB" read -r rel kind h; do

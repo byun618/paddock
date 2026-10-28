@@ -82,9 +82,11 @@
 
 - 작업 브랜치 `{{TASK_NAME}}` 는 {{BASE_BRANCH}} 에서 분기, 작업 하나의 수명만 갖는다 —
   PR 을 열면 로컬은 정리하고 원격만 남긴다. 머지 후 원격도 삭제 (단명 원칙 유지)
-- **{{BASE_BRANCH}} 반영은 PR 머지로만** — {{BASE_BRANCH}} 직접 push·웹 UI 머지 금지
+- **{{BASE_BRANCH}} 반영은 PR 머지로만** — {{BASE_BRANCH}} 직접 push 금지. PR 은 merge commit 으로 머지한다
+  (squash·rebase 머지면 `scripts/task-finish.sh` 가 작업 브랜치를 자동 정리하지 않고 멈춘다)
 <!-- /paddock:module -->
 <!-- paddock:module l3 -->
+  웹 UI 로 머지하지 않는다 —
   출고 때 scripts/release.sh 가 고른 PR 을 release 브랜치에 순서대로 모으고(검사 없이 순서 merge, 충돌이면 멈춤)
   release → {{BASE_BRANCH}} PR 하나를 merge commit 으로 머지한다 — 원래 PR 이 간접 머지로 MERGED 인지 확인되지 않으면 멈춘다.
   {{BASE_BRANCH}} 에 직접 올라가는 것은 release.sh 의 태그뿐이다

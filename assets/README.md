@@ -72,7 +72,7 @@ config 에만 있는 키 — 자산 문서에는 안 나오고 스크립트가 �
 | 이름 | 켜면 | 기본 |
 | --- | --- | --- |
 | `l1` | 작업 흐름 — task 스킬·리뷰어·defaults·판정표·task 스크립트 | 켬 |
-| `l2` | harness 능력 계약 + `PADDOCK_HARNESS` 매핑 하나 | 켬 |
+| `l2` | harness 능력 계약 + `PADDOCK_HARNESS` 매핑 하나. `l1` 을 전제한다(없으면 render 가 거절) | 켬 |
 | `l3` | 출고를 가리키는 문장 (release 자산은 v0 에 없음) | 끔 |
 | `specs-repo` | 작업 산출물을 별도 레포(`{{SPECS_ROOT}}`)에 두는 문장·점검 | 켬 |
 | `specs-inrepo` | 같은 레포 폴더 모드 — v0 미구현 | — |

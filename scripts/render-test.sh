@@ -118,5 +118,25 @@ done
 check "접두 있음 → 작업 이름 LIFE-NNN-<슬러그>" 'grep -rq "LIFE-NNN-<슬러그>" "$T/id-LIFE"'
 check "접두 없음 → 문서에 -NNN·-MMM 조각 0, 작업 이름 <슬러그>" '! grep -rqE --include="*.md" "(^|[^A-Za-z])-(NNN|MMM)" "$T/id-none" && grep -rq "demo-specs/<슬러그>/" "$T/id-none"'
 
+echo "R8 독립 리뷰 r1 지적 — 끝 개행 없는 .gitignore · 값 없는 인자 · l2 단독"
+mkdir -p "$T/nl"; printf 'node_modules' > "$T/nl/.gitignore"
+"$R" apply "$T/a" "$T/nl" >/dev/null; rc=$?
+check "끝 개행 없는 .gitignore → 마지막 줄 보존" '[ $rc = 0 ] && grep -qx "node_modules" "$T/nl/.gitignore" && grep -qx ".claude/worktrees/" "$T/nl/.gitignore"'
+( "$R" render --config & p=$!; sleep 3; kill $p 2>/dev/null && exit 99; wait $p ) >/dev/null 2>&1; rc=$?
+check "--config 값 없음 → 3초 안에 exit 2" '[ $rc = 2 ]'
+cfg "$T/l2only.sh" "l2"; printf 'PADDOCK_HARNESS=bare\n' >> "$T/l2only.sh"
+"$R" render --config "$T/l2only.sh" --out "$T/l2only" > "$T/err" 2>&1; rc=$?
+check "l2 만 켬 → 거절(l1 전제), 출력 없음" '[ $rc != 0 ] && grep -q "l1 을 전제" "$T/err" && [ ! -e "$T/l2only/AGENTS.md" ]'
+
+echo "R9 corral 매핑 렌더 → apply → paddock-check(harness 포함) · defaults 채움 검사"
+cfg "$T/cor.sh" "l1 l2 specs-repo"
+printf 'PADDOCK_HARNESS=corral\nISSUE_PREFIX=\nSPECS_ROOT=../demo-specs\nBASE_BRANCH=main\nBUNDLE_PREFIX=feature/\nMAX_FIX_ROUNDS=3\n' >> "$T/cor.sh"
+"$R" render --config "$T/cor.sh" --out "$T/cor" >/dev/null && mkdir -p "$T/cor-r" && "$R" apply "$T/cor" "$T/cor-r" >/dev/null; rc=$?
+check "corral 렌더·apply → exit 0, session-cleanup.sh 실행 비트" '[ $rc = 0 ] && [ -x "$T/cor-r/.agents/harness/session-cleanup.sh" ]'
+"$C" "$T/cor-r" > "$T/out" 2>&1; rc=$?
+check "paddock-check → 통과(capability-check names·shape 포함)" '[ $rc = 0 ] && grep -q "capability-check shape" "$T/out"'
+"$C" "$T/cor-r" --require-filled > "$T/out" 2>&1; rc=$?
+check "--require-filled, defaults.md 역할 표 비었음 → 실패" '[ $rc = 1 ] && grep -q "defaults.md 역할 표에 빈 행" "$T/out"'
+
 echo "통과 $pass · 실패 $fail"
 [ "$fail" = 0 ]

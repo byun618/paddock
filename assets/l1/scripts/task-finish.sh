@@ -13,7 +13,8 @@
 #
 # 변형 브랜치(<작업 이름>-*) 발견은 접두 매칭이다. VARIANT_SUFFIXES(경쟁 구현)는 원래부터 미머지 상태로 버려도 되는 게 설계다 — 강제 삭제.
 # 그 외 변형(-fix 등, 코디네이터가 게이트① 수정 라운드용으로 만든 것)은 작업 브랜치에 이미
-# 머지돼 있어야 정상이므로, 작업 브랜치(PR head) 조상인지 확인하고 아니면 멈춘다(미머지 작업 유실 방지).
+# 머지돼 있어야 정상이므로, 로컬·원격 사본이 작업 브랜치(PR head) 조상인지, worktree 에 미커밋 변경이 없는지 확인하고 아니면 멈춘다(미머지 작업 유실 방지).
+# PR 머지는 merge commit 을 전제한다 — squash·rebase 로 머지하면 로컬 작업 브랜치가 기본 브랜치의 조상이 아니라 정리를 멈춘다(손으로 지운다).
 # ID 없음 모드에서는 슬러그가 다른 작업 이름의 접두일 수 있다(foo 와 foo-bar) — 작업 이름을 서로 접두가 되지 않게 짓는다.
 set -euo pipefail
 
@@ -243,8 +244,9 @@ else
     MERGED) KEEP="origin/$PR_BASE" ;;
     *) die "$TASK 의 PR #$PR_NUM 상태가 $PR_STATE — 열림·머지만 정리한다" ;;
   esac
-  if has_local "$TASK"; then
-    git merge-base --is-ancestor "$TASK" "$KEEP" || die "로컬 $TASK 에 $KEEP 에 없는 커밋이 있다 — push(task-pr.sh) 뒤 다시"
+  if has_local "$TASK" && ! git merge-base --is-ancestor "$TASK" "$KEEP"; then
+    [ "$PR_STATE" = MERGED ] && die "PR #$PR_NUM 은 머지됐는데 로컬 $TASK 가 $KEEP 에 조상으로 들어 있지 않다 — squash·rebase 머지는 자동 정리하지 않는다(merge commit 만). 머지된 내용을 확인한 뒤 손으로 지운다" # guard:f-squash
+    die "로컬 $TASK 에 $KEEP 에 없는 커밋이 있다 — push(task-pr.sh) 뒤 다시"
   fi
   note "$TASK 보존 위치: $KEEP (PR #$PR_NUM $PR_STATE → $PR_BASE)"
 fi
@@ -266,9 +268,18 @@ fi
 for v in "${VARIANTS[@]:-}"; do
   [ -z "$v" ] && continue
   is_throwaway "$v" && continue
-  has_local "$v" || continue
-  git merge-base --is-ancestor "$v" "$KEEP" || \
-    die "$v 가 $KEEP 조상이 아님 — 미머지 작업일 수 있다, 수동 확인 후 재실행(자동 삭제 안 함)"
+  if [ -d "$WT/$v" ]; then
+    [ -z "$(git -C "$WT/$v" status --porcelain)" ] || die "$v worktree 에 미커밋 변경 — 커밋해 작업 브랜치에 넣거나 버린 뒤 재실행(자동 삭제 안 함)" # guard:variant-dirty
+  fi
+  if has_local "$v"; then
+    git merge-base --is-ancestor "$v" "$KEEP" || \
+      die "$v 가 $KEEP 조상이 아님 — 미머지 작업일 수 있다, 수동 확인 후 재실행(자동 삭제 안 함)"
+  fi
+  if has_remote "$v"; then
+    VOID="$(git rev-parse --verify -q "refs/remotes/origin/$v" || true)"
+    [ -n "$VOID" ] && git merge-base --is-ancestor "$VOID" "$KEEP" || \
+      die "원격 $v 가 $KEEP 조상이 아님 — 원격에만 있는 작업일 수 있다, 수동 확인 후 재실행(자동 삭제 안 함)" # guard:variant-remote
+  fi
 done
 
 # 3. worktree 제거 — $TASK 자신 + 변형 전부

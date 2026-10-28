@@ -1,6 +1,6 @@
 ---
 name: adopt
-description: 레포(신규·기존)에 paddock AI 작업 흐름 — AGENTS.md 지도, .agents 규칙·역할·스킬, 사용자 승인 게이트가 있는 task 흐름(분석→구현→독립 리뷰→판정→PR), harness 매핑 — 을 그 프로젝트에 맞게 설계해 깐다. 코드베이스와 기존 CLAUDE.md·AGENTS.md·규칙·스킬을 감사하고, 네이티브 실행·테스트 계층·리뷰 관점·경로 기준·harness 도구를 설계해 승인받은 뒤 생성·검증한다. 「paddock 적용」「adopt」「이 레포에 작업 흐름 깔아줘」「corral 흐름을 이 프로젝트에도」「AGENTS.md 체계 세팅」에 쓴다. 이미 깐 레포의 설계 변경에도 쓴다. CLAUDE.md 한 파일만 쓰거나 고치는 일, 에이전트 팀 구성, 코드 리뷰 요청에는 쓰지 않는다.
+description: 레포(신규·기존)에 paddock AI 작업 흐름 — AGENTS.md 지도, .agents 규칙·역할·스킬, 사용자 승인 게이트가 있는 task 흐름(분석→구현→독립 리뷰→판정→PR), harness 매핑 — 을 그 프로젝트에 맞게 설계해 깐다. 코드베이스와 기존 CLAUDE.md·AGENTS.md·규칙·스킬을 감사하고, 네이티브 실행·테스트 계층·리뷰 관점·경로 기준·harness 도구를 설계해 승인받은 뒤 생성·검증한다. 「paddock 적용」「adopt」「이 레포에 작업 흐름 깔아줘」「corral 흐름을 이 프로젝트에도」「AGENTS.md 체계 세팅」에 쓴다. 이미 깐 레포의 설계 변경에도 쓴다. CLAUDE.md·AGENTS.md 한 파일만 쓰거나 고치는 일, 에이전트 팀 구성, 코드 리뷰 요청에는 쓰지 않는다.
 ---
 
 # adopt — 프로젝트에 paddock 작업 흐름 깔기
@@ -48,7 +48,7 @@ description: 레포(신규·기존)에 paddock AI 작업 흐름 — AGENTS.md �
 
 `design.md` 「분석」 표의 항목을 채운다 — 스택, 패키지 매니저, 빌드·실행·테스트·린트 명령(출처 파일과 함께), CI, 배포 산출물,
 사용자가 실제로 쓰는 실행 경로, 로컬 데이터·런타임 자원, 외부 의존(API·CLI), 이미 쓰는 에이전트 도구(Claude Code·Codex 등)와
-터미널 제어 도구(`corral`·`tmux` 실행 파일 유무). 명령은 「있다고 적힌 것」과 「이 세션에서 돌려 본 것」을 구분해 적는다.
+터미널 제어 도구(`corral`·`tmux` 실행 파일 유무), git 훅(`core.hooksPath`·husky·`gitleaks` 유무). 명령은 「있다고 적힌 것」과 「이 세션에서 돌려 본 것」을 구분해 적는다.
 
 ## 2. 설계
 
@@ -88,15 +88,17 @@ paddock-render apply "$STAGE/out" "<대상>" --dry-run   # exit 3 이면 충돌 
 
 승인된 설계 그대로 한다. 설계에 없는 판단이 필요해지면 멈추고 묻는다.
 
-1. (승인됐으면) specs 레포를 만들고 `SPECS_ROOT` 위치에 둔다. 그 레포에도 `.githooks/pre-commit` 과 `core.hooksPath`
+1. (승인됐으면) specs 레포를 만들고 `SPECS_ROOT` 위치에 둔다. 그 레포에도 `STAGE/out/.githooks/pre-commit` 을 같은 경로로 복사하고 `core.hooksPath .githooks`
 2. `STAGE/out` 을 지우고 다시 렌더한다(설계가 바뀌었을 수 있다)
 3. `STAGE/out` 안에서 설계 슬롯을 채운다 — `<!-- paddock:design Dn -->` 과 닫는 줄 **사이만** 고친다. 안내 주석은 지운다.
    `.agents/defaults.md` 는 seed 라 파일째 쓴다. 다른 줄은 손대지 않는다
 4. 기존 내용 옮기기 — 옮기는 계획대로 STAGE 의 목적지 파일(슬롯 안·`rules/*.md`·`learnings/`·스킬)에 넣고,
-   대상 레포의 충돌 파일은 계획대로 바꾼다(예: 기존 `CLAUDE.md` 를 지우고 렌더본으로, 기존 `.claude/skills/<x>` 를 `.agents/skills/<x>` 로 `git mv`)
+   대상 레포의 충돌 파일은 계획대로 바꾼다(예: 기존 `CLAUDE.md` 를 지우고 렌더본으로, 기존 `.claude/skills/<x>` 를 `.agents/skills/<x>` 로 `git mv` 한 뒤 빈 `.claude/skills` 를 `rmdir`).
+   깔지 않기로 한 항목(서브에이전트 정의가 있는 `.claude/agents` 등)은 `STAGE/out/.paddock/manifest.tsv` 에서 그 행을 지운다
 5. `paddock-render apply "$STAGE/out" "<대상>"` — exit 3 이면 남은 충돌을 보고하고 멈춘다(덮어쓰지 않는다)
 6. `STAGE/design.md` 를 `<대상>/.paddock/design.md` 로 복사한다(변경 이력 표에 이번 적용 한 줄)
-7. `git -C <대상> config core.hooksPath .githooks` — 이 클론에만 적용됨을 보고에 적는다
+7. 훅 — 승인된 계획대로. 기존 `core.hooksPath`·husky 가 없으면 `git -C <대상> config core.hooksPath .githooks` (이 클론에만 적용됨을 보고에 적는다).
+   있으면 덮지 않는다 — 계획이 합침이면 기존 훅에서 `.githooks/pre-commit` 을 부르게 한다
 
 ## 4. 검증
 
@@ -104,6 +106,7 @@ paddock-render apply "$STAGE/out" "<대상>" --dry-run   # exit 3 이면 충돌 
 paddock-check "<대상>" --require-filled      # l1 을 끈 레포는 --require-filled 없이
 ```
 
+- 훅: `git -C <대상> config core.hooksPath` 가 계획과 같은지, `command -v gitleaks` — 없으면 「첫 커밋이 막힌다, 설치 필요」를 보고 맨 위에
 - `l2` 를 켰고 그 도구가 설치돼 있으면 `node .agents/harness/capability-check.mjs runtime --tool <도구>` 도 돌린다. 없으면 「공백」으로 보고
 - 실패하면 고친다 — 고정 부분 drift 면 그 파일을 렌더본으로 되돌리고, 슬롯이 비었으면 채운다. 같은 실패가 두 번이면 멈추고 보고
 - 대상 레포 테스트를 돌릴 필요는 없다(코드를 바꾸지 않았다). 단 옮긴 스킬이 스크립트를 가리키면 경로가 살아 있는지 본다
