@@ -24,17 +24,19 @@ missing=$(comm -23 <(echo "$used") <(echo "$declared") | sed '/^$/d')
 echo "2 마커"
 marker_errors=$(asset_files | while read -r f; do
   awk -v f="$f" '
+    # 허용: module 안에 design 한 겹. 금지: design 안의 무엇이든, module 안의 module
+    function kindof(s) { return (s ~ /paddock:design/) ? "design" : "module" }
     /<!-- paddock:(design|module) [^ ]+ -->/ {
-      if (open != "") { printf "%s:%d 구간 %s 이 닫히기 전에 다시 열림\n", f, NR, open }
-      match($0, /paddock:(design|module)/); open = substr($0, RSTART + 8, RLENGTH - 8); next
+      k = kindof($0)
+      if (depth == 2 || (depth == 1 && !(stack[1] == "module" && k == "design"))) printf "%s:%d %s 안에 %s 를 열 수 없음\n", f, NR, stack[depth], k
+      stack[++depth] = k; next
     }
     /<!-- \/paddock:(design|module) -->/ {
-      match($0, /paddock:(design|module)/); kind = substr($0, RSTART + 8, RLENGTH - 8)
-      if (open == "") { printf "%s:%d 열리지 않은 %s 를 닫음\n", f, NR, kind }
-      else if (open != kind) { printf "%s:%d %s 를 %s 로 닫음\n", f, NR, open, kind }
-      open = ""
+      k = kindof($0)
+      if (depth == 0) printf "%s:%d 열리지 않은 %s 를 닫음\n", f, NR, k
+      else { if (stack[depth] != k) printf "%s:%d %s 를 %s 로 닫음\n", f, NR, stack[depth], k; depth-- }
     }
-    END { if (open != "") printf "%s 끝까지 %s 가 안 닫힘\n", f, open }
+    END { if (depth > 0) printf "%s 끝까지 %s 가 안 닫힘\n", f, stack[depth] }
   ' "$f"
 done)
 [ -z "$marker_errors" ] && echo "  ✓ 짝·중첩 이상 없음" || { echo "$marker_errors" | while read -r l; do bad "$l"; done; fail=1; }

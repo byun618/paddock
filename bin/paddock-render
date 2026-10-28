@@ -83,9 +83,13 @@ cmd_render() {
   done
   export PADDOCK_MODULES
 
-  # 렌더할 층: l0 항상, l1·l2 는 모듈이 켜졌을 때, l2 는 공통(common) + 쓰는 도구 하나
-  local layers="l0"
-  has_word "$PADDOCK_MODULES" l1 && layers="$layers l1"
+  # 렌더할 층: l0 항상, 켠 모듈마다 assets/<모듈>/ 이 있으면 그 폴더(파일 전체가 모듈에 딸린 것),
+  # l2 는 공통(common) + 쓰는 도구 하나
+  local layers="l0" m
+  for m in $PADDOCK_MODULES; do
+    case "$m" in l0|l2) continue ;; esac
+    [ -d "$ASSETS/$m" ] && layers="$layers $m"
+  done
   if has_word "$PADDOCK_MODULES" l2; then
     [ -n "$PADDOCK_HARNESS" ] || die "render: l2 를 켰는데 PADDOCK_HARNESS 가 비었다"
     [ -d "$ASSETS/l2/$PADDOCK_HARNESS" ] || die "render: 모르는 harness: $PADDOCK_HARNESS"

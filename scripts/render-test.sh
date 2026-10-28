@@ -45,6 +45,13 @@ cfg "$T/c1.sh" "l1"
 "$T/fx/bin/paddock-render" render --config "$T/c1.sh" --out "$T/m1" >/dev/null
 check "l1 켬·bundle 끔 → a L1줄 z" '[ "$(cat "$T/m1/m.md" | tr "\n" " ")" = "a L1줄 z " ]'
 
+mkdir -p "$T/fx/assets/bundle/x"; printf 'b\n' > "$T/fx/assets/bundle/x/only-bundle.md"
+"$T/fx/bin/paddock-render" render --config "$T/c1.sh" --out "$T/m5" >/dev/null
+check "모듈 폴더 — bundle 끔이면 파일 없음" '[ -f "$T/m5/m.md" ] && [ ! -e "$T/m5/x/only-bundle.md" ]'
+cfg "$T/c2.sh" "l1 bundle"
+"$T/fx/bin/paddock-render" render --config "$T/c2.sh" --out "$T/m4" >/dev/null
+check "모듈 폴더 — bundle 켬이면 파일 생김" '[ -f "$T/m4/x/only-bundle.md" ]'
+
 echo "R4 실패 — 미정의 변수·안 닫힌 모듈·빈 아닌 --out"
 printf '{{NOPE_VAR}}\n' > "$T/fx/assets/l0/v.md"
 "$T/fx/bin/paddock-render" render --config "$T/c1.sh" --out "$T/m2" >/dev/null 2>"$T/err"; rc=$?

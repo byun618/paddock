@@ -13,6 +13,10 @@
 
 - 초안을 언제 쓰고 언제 채택하는지는 그 절차를 실행하는 스킬이 정한다. 그런 스킬이 없으면 결정한 세션이 초안을 쓰고 사용자가 채택한다.
 <!-- paddock:module l1 -->
+- 초안 = 게이트 ②(task-coordinate §8).
+<!-- /paddock:module -->
+<!-- paddock:module l3 -->
+- 채택 = 출고 회고(release §4).
 <!-- /paddock:module -->
 - 파일 이름 `docs/adr/NNNN-<제목-케밥>.md`. 초안은 번호 없이 `status: proposed`.
 - **번호는 채택할 때 매긴다** — 이 폴더의 가장 큰 번호 + 1, 네 자리(`0001`). 초안 단계에서 번호를 집지 않는다
