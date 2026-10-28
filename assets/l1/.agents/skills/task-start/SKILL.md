@@ -1,7 +1,7 @@
 ---
 name: task-start
 description: >-
-  "{{ISSUE_PREFIX}}-N 시작하자", "작업 시작", "이번 코디네이터는 다른 도구로" 같은 작업 시작
+  "{{TASK_REF}} 시작하자", "작업 시작", "이번 코디네이터는 다른 도구로" 같은 작업 시작
   요청이 본체 세션({{BASE_BRANCH}})에 오면 쓴다. 일감의 작업 worktree를 만들고, 선택한 코디네이터
   도구의 세션을 기동해 00-start.md 기록과 킥오프 지시문 전달까지 한다. 기존 작업 재개도
   기록된 코디네이터를 확인하는 데 쓴다. 구현·리뷰 지휘는 이 스킬이 아니라 task-coordinate
@@ -22,7 +22,7 @@ description: >-
 - 신규 작업은 사용자가 지정한 코디네이터 도구를 사용한다. 선택할 수 있는 도구 집합과 미지정 기본값은
   `.agents/defaults.md` 의 역할 기본값에 있다. 이 선택은 해당 작업에만 적용한다. 현재 대화 도구나 전역
   기본 모델로 추측해 바꾸지 않는다.
-- 기존 작업은 `{{SPECS_ROOT}}/{{ISSUE_PREFIX}}-NNN-<슬러그>/00-start.md`(절대경로, AGENTS.md 「산출물 규칙」)를 먼저 읽는다. 미지정 재개는 기록된
+- 기존 작업은 `{{SPECS_ROOT}}/{{TASK_NAME}}/00-start.md`(절대경로, AGENTS.md 「산출물 규칙」)를 먼저 읽는다. 미지정 재개는 기록된
   코디네이터를 따른다. 기록이 없는 과거 작업은 킥오프·실제 세션을 확인해 기록부터 보완한다.
 - 선택이 기존 기록과 다르거나 `.agents/defaults.md` 의 역할 기본값에 없는 도구를 요청하면 새 터미널을 만들지 않는다 — 도중 교체는
   이 스킬 밖이다. 기존 코디네이터·워커·Run과 미완 작업을 확인하고 인계 범위를 사용자와 정한 뒤 진행한다.
@@ -54,23 +54,23 @@ description: >-
 <!-- paddock:module specs-repo -->
    **산출물 레포**(`{{SPECS_ROOT}}`, 본체 옆 폴더, AGENTS.md 「산출물 규칙」)가 있는지, 그 레포의 `core.hooksPath` 도 `.githooks` 인지 같이 확인한다.
 <!-- /paddock:module -->
-   슬러그는 타이틀에서 케밥케이스 1~3단어로 파생하며, 기존 {{ISSUE_PREFIX}}-N의 슬러그는 재사용한다.
+   슬러그는 타이틀에서 케밥케이스 1~3단어로 파생하며, 기존 작업의 슬러그는 재사용한다.
 2. **분기 기준 선택 → 작업 worktree 생성** (신규만, 본체는 {{BASE_BRANCH}} 유지):
    - **독립 작업**(기본): `{{BASE_BRANCH}}` 에서 딴다. 게이트 ② 에서 {{BASE_BRANCH}} 대상 PR 이 된다.
 <!-- paddock:module bundle -->
-   - **묶음 자식**: 서로 의존하는 작업 묶음(체크포인트)이면 `{{BUNDLE_PREFIX}}{{ISSUE_PREFIX}}-MMM-<슬러그>`(MMM = 체크포인트)에서 딴다.
+   - **묶음 자식**: 서로 의존하는 작업 묶음(체크포인트)이면 `{{BUNDLE_PREFIX}}{{BUNDLE_NAME}}`(체크포인트 작업 이름)에서 딴다.
      **묶음 자식의 task-start 는 그 묶음의 묶음 코디가 한다** — 본체가 자식 시작 요청을 받으면 직접 하지 않는다:
      활성 묶음 코디가 있으면 그 세션에 넘기고(통로는 묶음 코디 절차 4), feature 는 있는데 묶음 코디가 없으면 아래 「체크포인트 시작」으로 묶음 코디부터 띄운다.
      feature 가 아직 없으면 사용자에게 묶음으로 열지 한 번 묻고, 열면 「체크포인트 시작」으로 연다.
      게이트 ② 에서 PR 대신 feature 로 로컬 merge 된다(AGENTS.md 「브랜치 규약」). 미지정·애매하면 독립 작업이다 —
      트래커 부모가 체크포인트라는 것만으로 묶음 자식이 되지 않는다(판단 기준은 의존이다).
-   - **체크포인트 시작**(묶음 열기): 체크포인트 일감 자체를 시작하면 이 경로다(분해 뒤 자식이 하나뿐이면 묶음 코디 절차 2 가 접는다). 작업 브랜치 `{{ISSUE_PREFIX}}-MMM-<슬러그>` 를 만들지 않는다. `origin/{{BASE_BRANCH}}` 최신에서 feature 를 만들어 origin 에 push 하고,
+   - **체크포인트 시작**(묶음 열기): 체크포인트 일감 자체를 시작하면 이 경로다(분해 뒤 자식이 하나뿐이면 묶음 코디 절차 2 가 접는다). 작업 브랜치 `{{BUNDLE_NAME}}` 를 만들지 않는다. `origin/{{BASE_BRANCH}}` 최신에서 feature 를 만들어 origin 에 push 하고,
      feature worktree 를 그 feature 체크아웃으로 연다 — 이 worktree 가 **묶음 코디**의 작업 worktree 다. 만료일(기본 시작일 + 2주)을 00-start 에 적는다.
      feature 가 이미 있으면(묶음 코디 없이 자식만 시작된 경우, 출고 중 수정으로 정리된 feature worktree 를 다시 여는 경우 — 묶음 코디 절차 6) 만들기·push 는 건너뛰고 feature worktree 와 묶음 코디만 연다.
      **본체가 이미 분해·자식 시작을 했어도 묶음 코디는 띄운다** — 00-start 분해 상태는 3단계.
      묶음 코디가 하는 일은 [묶음 코디 절차](../task-coordinate/references/bundle.md)가 원본이다.
    ```bash
-   git fetch origin {{BASE_BRANCH}} && git branch --no-track {{BUNDLE_PREFIX}}{{ISSUE_PREFIX}}-MMM-<슬러그> origin/{{BASE_BRANCH}} && git push -u origin {{BUNDLE_PREFIX}}{{ISSUE_PREFIX}}-MMM-<슬러그>    # 체크포인트 시작 — feature 가 없을 때만
+   git fetch origin {{BASE_BRANCH}} && git branch --no-track {{BUNDLE_PREFIX}}{{BUNDLE_NAME}} origin/{{BASE_BRANCH}} && git push -u origin {{BUNDLE_PREFIX}}{{BUNDLE_NAME}}    # 체크포인트 시작 — feature 가 없을 때만
    ```
 <!-- /paddock:module -->
    worktree 는 **본체 기준 절대경로**로 만든다 — worktree 안에서 쳐도 상대경로처럼 그 아래로 중첩되지 않는다(AGENTS.md 「중첩 금지」).
@@ -78,15 +78,15 @@ description: >-
    ```bash
    ROOT="$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")"
 <!-- paddock:module bundle -->
-   git fetch origin {{BUNDLE_PREFIX}}{{ISSUE_PREFIX}}-MMM-<슬러그>    # 묶음 자식만 — 분기 전에 origin/feature 를 최신으로. 실패하면 분기하지 않고 멈춘다(독립 작업·체크포인트 시작은 건너뛴다)
-   git worktree add "$ROOT/{{WORKTREE_DIR}}/{{ISSUE_PREFIX}}-NNN-<슬러그>" -b {{ISSUE_PREFIX}}-NNN-<슬러그> origin/{{BUNDLE_PREFIX}}{{ISSUE_PREFIX}}-MMM-<슬러그>   # 묶음 자식
-   git worktree add "$ROOT/{{WORKTREE_DIR}}/{{ISSUE_PREFIX}}-MMM-<슬러그>" {{BUNDLE_PREFIX}}{{ISSUE_PREFIX}}-MMM-<슬러그>                                       # 체크포인트 시작 — feature worktree
+   git fetch origin {{BUNDLE_PREFIX}}{{BUNDLE_NAME}}    # 묶음 자식만 — 분기 전에 origin/feature 를 최신으로. 실패하면 분기하지 않고 멈춘다(독립 작업·체크포인트 시작은 건너뛴다)
+   git worktree add "$ROOT/{{WORKTREE_DIR}}/{{TASK_NAME}}" -b {{TASK_NAME}} origin/{{BUNDLE_PREFIX}}{{BUNDLE_NAME}}   # 묶음 자식
+   git worktree add "$ROOT/{{WORKTREE_DIR}}/{{BUNDLE_NAME}}" {{BUNDLE_PREFIX}}{{BUNDLE_NAME}}                                       # 체크포인트 시작 — feature worktree
 <!-- /paddock:module -->
-   git worktree add "$ROOT/{{WORKTREE_DIR}}/{{ISSUE_PREFIX}}-NNN-<슬러그>" -b {{ISSUE_PREFIX}}-NNN-<슬러그> {{BASE_BRANCH}}   # 독립 작업
+   git worktree add "$ROOT/{{WORKTREE_DIR}}/{{TASK_NAME}}" -b {{TASK_NAME}} {{BASE_BRANCH}}   # 독립 작업
    ```
 <!-- paddock:module bundle -->
    **묶음 자식이면 생성 직후 상위를 feature worktree 로 지정한다** — 사이드바가 체크포인트 아래에 중첩해 보이게 하는
-   표시용 메타다. feature worktree(`{{WORKTREE_DIR}}/{{ISSUE_PREFIX}}-MMM-<슬러그>`)가 있을 때만 하고,
+   표시용 메타다. feature worktree(`{{WORKTREE_DIR}}/{{BUNDLE_NAME}}`)가 있을 때만 하고,
    명령은 매핑의 「git 으로 만든 직후 상위를 지정한다」 줄을 따른다. **실패는 경고만** — 거절 원문을
    00-start 에 남기고 진행한다. 독립 작업은 루트로 둔다. 그 능력이 없는 매핑이면 이 단계는 공백이다.
 <!-- /paddock:module -->
@@ -96,11 +96,11 @@ description: >-
    묶음 코디도 같다(묶음 코디 절차 머리) —
    정리를 마쳐 작업 worktree 가 사라진 묶음 코디 세션은 활성으로 세지 않는다(묶음 코디 절차 6).
 <!-- /paddock:module -->
-3. **기동 전에 선택 기록**: `{{SPECS_ROOT}}/{{ISSUE_PREFIX}}-NNN-<슬러그>/00-start.md`를 작성한다.
+3. **기동 전에 선택 기록**: `{{SPECS_ROOT}}/{{TASK_NAME}}/00-start.md`를 작성한다.
 <!-- paddock:module specs-repo -->
    산출물 레포에 그 폴더만 커밋·push 한다(AGENTS.md 「산출물 규칙」의 커밋 명령). 작업 worktree 에는 산출물을 두지 않는다.
 <!-- /paddock:module -->
-   최소 항목: {{ISSUE_PREFIX}}-N, 슬러그, 작업 브랜치·**분기 기준**·절대 worktree 경로,
+   최소 항목: {{TASK_REF}}, 슬러그, 작업 브랜치·**분기 기준**·절대 worktree 경로,
    **산출물 작업 폴더 절대경로**(코디·워커·리뷰어가 이 값을 그대로 쓴다), 코디네이터 도구, 선택 근거
    (사용자 지정/신규 기본값/재개), 모델·effort(미지정 기본값은 `.agents/defaults.md` 의 역할 기본값),
    **선택한 매핑**, 기동 상태. 지정 모델을 쓸 수 있는지 기동 전에 확인하고(방법은 선택한 매핑,
@@ -112,7 +112,7 @@ description: >-
 <!-- /paddock:module -->
    워커 구성·구현→리뷰 흐름·사용자 예외(경량/전체 경로 지정 포함), 수정 라운드용 워커 유지 요청도 기록하고, 재개는 이력을 덧붙인다.
 <!-- paddock:module bundle -->
-   **체크포인트 시작이면** 체크포인트 폴더의 00-start 에 묶음 항목을 더한다: 묶음 표시(`묶음 코디 — {{ISSUE_PREFIX}}-MMM`, 작업 브랜치 대신 feature 브랜치·만료일),
+   **체크포인트 시작이면** 체크포인트 폴더의 00-start 에 묶음 항목을 더한다: 묶음 표시(`묶음 코디 — {{BUNDLE_REF}}`, 작업 브랜치 대신 feature 브랜치·만료일),
    분해 상태(`분해 전` / `분해 끝` 둘 — `분해 끝` 은 누가 분해했든 다시 하지 않는다는 뜻), 이미 시작된 자식(따로 — 자식·그 코디 세션). 구현 워커·리뷰어 구성은 적지 않는다 — 묶음 코디는 그것을 띄우지 않는다(자식 코디 몫).
 <!-- /paddock:module -->
    이 기록은 6단계 전달 전에 끝낸다.
@@ -148,13 +148,13 @@ description: >-
      `00-start.md`에 기록한다. **확인된 배달만 배달이고, 큐 수락·결과 불명은 중복 주입하지 않는다.**
      배달 증명이 공백인 도구라면 그 사실을 적고 사람이 화면으로 확인한 시각을 남긴다.
      ```
-     너는 {{ISSUE_PREFIX}}-NNN 작업의 코디네이터야. <산출물 루트 절대경로>/{{ISSUE_PREFIX}}-NNN-<슬러그>/00-start.md와
+     너는 {{TASK_REF}} 작업의 코디네이터야. <산출물 루트 절대경로>/{{TASK_NAME}}/00-start.md와
      .agents/skills/task-coordinate/SKILL.md를 읽고, 실제 세션에서 전제 도구를 확인한 뒤 절차대로 진행해.
      ```
 <!-- paddock:module bundle -->
      체크포인트 시작(묶음 코디)이면 이 지시를 대신 보낸다:
      ```
-     너는 {{ISSUE_PREFIX}}-MMM 체크포인트의 묶음 코디네이터야. <산출물 루트 절대경로>/{{ISSUE_PREFIX}}-MMM-<슬러그>/00-start.md와
+     너는 {{BUNDLE_REF}} 체크포인트의 묶음 코디네이터야. <산출물 루트 절대경로>/{{BUNDLE_NAME}}/00-start.md와
      .agents/skills/task-coordinate/references/bundle.md를 읽고, 실제 세션에서 전제 도구를 확인한 뒤 그 절차대로 진행해.
      ```
 <!-- /paddock:module -->

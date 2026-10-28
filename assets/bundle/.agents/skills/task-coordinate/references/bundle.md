@@ -2,13 +2,13 @@
 # 묶음 코디 절차 (체크포인트 feature worktree 세션에서 실행)
 
 **묶음 코디 절차의 원본은 이 파일 하나다.** task-start(체크포인트 시작·자식 시작)와 task-coordinate(§8 묶음 자식)는 이리로 가리키기만 한다.
-묶음 코디 = 서로 의존하는 작업 묶음(체크포인트) 하나를 맡는 코디네이터. feature worktree(`{{WORKTREE_DIR}}/{{ISSUE_PREFIX}}-MMM-<슬러그>`,
-`{{BUNDLE_PREFIX}}{{ISSUE_PREFIX}}-MMM-<슬러그>` 체크아웃)에서 돈다. **한 묶음에 묶음 코디는 하나다** — task-start 가 띄우고, 활성 묶음 코디가 있으면 새로 만들지 않는다.
+묶음 코디 = 서로 의존하는 작업 묶음(체크포인트) 하나를 맡는 코디네이터. feature worktree(`{{WORKTREE_DIR}}/{{BUNDLE_NAME}}`,
+`{{BUNDLE_PREFIX}}{{BUNDLE_NAME}}` 체크아웃)에서 돈다. **한 묶음에 묶음 코디는 하나다** — task-start 가 띄우고, 활성 묶음 코디가 있으면 새로 만들지 않는다.
 재개된 묶음 코디는 `00-start.md` 이력의 마지막 상태와 feature PR 유무로 이어 갈 절을 정한다.
 <!-- paddock:module l3 -->
 PR 이 열려 있으면 6 의 「출고 중 수정」으로 간다.
 <!-- /paddock:module -->
-작업 폴더는 체크포인트 폴더 `{{SPECS_ROOT}}/{{ISSUE_PREFIX}}-MMM-<슬러그>/`(절대경로)다.
+작업 폴더는 체크포인트 폴더 `{{SPECS_ROOT}}/{{BUNDLE_NAME}}/`(절대경로)다.
 
 **이 문서에는 도구 명령이 없다.** 제어 도구 동작은 능력 이름(겹낫표)으로만 적고 명령은 선택한 하네스 매핑에서 읽는다(`.agents/harness/capabilities.md`).
 git 명령 블록은 그대로 쓴다. 아래의 SendMessage(세션 목록 ListAgents)는 하네스 능력이 아니라 AGENTS.md 「세션 간 통신」의 claude↔claude 보조 통로다.
@@ -51,7 +51,7 @@ git 명령 블록은 그대로 쓴다. 아래의 SendMessage(세션 목록 ListA
 
 ## 3. 자식 시작
 
-- **자식 task-start 는 묶음 코디가 한다.** task-start 스킬을 이 세션에서 그대로 따른다 — 분기 기준은 `origin/{{BUNDLE_PREFIX}}{{ISSUE_PREFIX}}-MMM-<슬러그>`,
+- **자식 task-start 는 묶음 코디가 한다.** task-start 스킬을 이 세션에서 그대로 따른다 — 분기 기준은 `origin/{{BUNDLE_PREFIX}}{{BUNDLE_NAME}}`,
   상위 지정은 이 feature worktree.
 - **worktree 는 task-start 2단계 블록 그대로 본체 기준 절대경로로 만든다.** 이 세션의 cwd 는 feature worktree 라
   상대경로 `{{WORKTREE_DIR}}/…` 는 feature worktree 아래로 풀려 중첩된다(AGENTS.md 「중첩 금지」).
@@ -83,7 +83,7 @@ git 명령 블록은 그대로 쓴다. 아래의 SendMessage(세션 목록 ListA
   다르면 자식이 push 한 것이다. 알림 시점과 무관하게 판정된다. 같으면 아직이다 — 잠시 뒤 다시 보고, 계속 같으면 자식 코디(세션이 남아 있으면)나 사용자에게 확인한다.
   `--into` 가 멈추면(merge 충돌 등) 정리 전이라 자식 세션이 남는다 — 자식 코디가 정정 알림을 보낸다.
   ```bash
-  R="$(git ls-remote --exit-code origin refs/heads/{{BUNDLE_PREFIX}}{{ISSUE_PREFIX}}-MMM-<슬러그>)" && [ "$(echo "$R" | cut -f1)" != "$(git rev-parse HEAD)" ]    # exit 0 = 반영됨 · 1 = 아직 · 2 = 원격 feature 없음(반영 아님)
+  R="$(git ls-remote --exit-code origin refs/heads/{{BUNDLE_PREFIX}}{{BUNDLE_NAME}})" && [ "$(echo "$R" | cut -f1)" != "$(git rev-parse HEAD)" ]    # exit 0 = 반영됨 · 1 = 아직 · 2 = 원격 feature 없음(반영 아님)
   ```
 - 자식 폴더를 고쳐야 할 일이 보이면 고치지 않고 그 자식 코디에게 알린다.
 
@@ -93,8 +93,8 @@ git 명령 블록은 그대로 쓴다. 아래의 SendMessage(세션 목록 ListA
 {{BASE_BRANCH}} 가 움직였으면 {{BASE_BRANCH}} 를 feature 로 merge 해 push 한다 — **rebase 금지**(자식 worktree 가 살아 있다). merge 가 멈추면 이 worktree 에서 풀고 커밋한다.
 
 ```bash
-git pull --ff-only origin {{BUNDLE_PREFIX}}{{ISSUE_PREFIX}}-MMM-<슬러그>        # 자식 반영 뒤
-git fetch origin {{BASE_BRANCH}} && git merge origin/{{BASE_BRANCH}} && git push origin {{BUNDLE_PREFIX}}{{ISSUE_PREFIX}}-MMM-<슬러그>   # {{BASE_BRANCH}} 가 움직였을 때
+git pull --ff-only origin {{BUNDLE_PREFIX}}{{BUNDLE_NAME}}        # 자식 반영 뒤
+git fetch origin {{BASE_BRANCH}} && git merge origin/{{BASE_BRANCH}} && git push origin {{BUNDLE_PREFIX}}{{BUNDLE_NAME}}   # {{BASE_BRANCH}} 가 움직였을 때
 ```
 
 ## 6. 묶음 마무리 — 마지막 자식이 feature 에 반영된 뒤
@@ -112,10 +112,10 @@ git fetch origin {{BASE_BRANCH}} && git merge origin/{{BASE_BRANCH}} && git push
 <!-- paddock:module specs-repo -->
    push 한 뒤
 <!-- /paddock:module -->
-   이 feature worktree 에서 `scripts/task-pr.sh {{BUNDLE_PREFIX}}{{ISSUE_PREFIX}}-MMM-<슬러그>` 로 feature → {{BASE_BRANCH}} PR 하나를 연다.
+   이 feature worktree 에서 `scripts/task-pr.sh {{BUNDLE_PREFIX}}{{BUNDLE_NAME}}` 로 feature → {{BASE_BRANCH}} PR 하나를 연다.
 4. **정리까지 한다.** 정리는 feature worktree 를 지우므로 **묶음 코디 세션의 마지막 실행**이다 — 이후 도구 호출을 하지 않는다.
    `task-finish.sh` 는 feature worktree 안 실행을 거절하므로 본체 경로에서 본체의 스크립트로 돌린다:
-   `cd <본체 절대경로> && scripts/task-finish.sh {{BUNDLE_PREFIX}}{{ISSUE_PREFIX}}-MMM-<슬러그>` — PR 이 있고 로컬 feature 가 원격 사본에 다 들어 있고 feature worktree 가 깨끗하고
+   `cd <본체 절대경로> && scripts/task-finish.sh {{BUNDLE_PREFIX}}{{BUNDLE_NAME}}` — PR 이 있고 로컬 feature 가 원격 사본에 다 들어 있고 feature worktree 가 깨끗하고
    남은 자식(자식 worktree·feature 에 안 들어간 자식 브랜치)이 없음을 확인한 뒤 feature worktree 와 로컬 feature 브랜치를 정리한다. feature 는 원격(PR head)에 남는다.
    자식은 upstream 이 원격 feature 이거나 feature 고유 커밋을 품은 브랜치·worktree 로 센다 — **upstream 이 원격 feature 가 아니고(`--no-track` 으로 땄거나 뒤에 `push -u` 로 바뀜)
    feature 의 첫 고유 커밋보다 먼저 딴 자식은 못 센다**. 자식 중 하나라도 `push -u`·`--no-track` 을 썼고 첫 자식 반영 전에 딴 것이면 정리 전에 `git worktree list` 로 자식 worktree 를 직접 본다.
@@ -126,7 +126,7 @@ git fetch origin {{BASE_BRANCH}} && git merge origin/{{BASE_BRANCH}} && git push
 <!-- /paddock:module -->
 <!-- paddock:module l3 -->
 5. **출고 중 수정**(release §2)이 묶음 PR 에 필요하면: 본체가 feature worktree 를 **다시 열고** 묶음 코디를 재기동한다 — task-start 2단계 「체크포인트 시작」의
-   feature 가 이미 있는 경우(만들기·push 는 건너뛰고 feature worktree 블록 `git worktree add "$ROOT/{{WORKTREE_DIR}}/{{ISSUE_PREFIX}}-MMM-<슬러그>" {{BUNDLE_PREFIX}}{{ISSUE_PREFIX}}-MMM-<슬러그>` 와 묶음 코디만).
+   feature 가 이미 있는 경우(만들기·push 는 건너뛰고 feature worktree 블록 `git worktree add "$ROOT/{{WORKTREE_DIR}}/{{BUNDLE_NAME}}" {{BUNDLE_PREFIX}}{{BUNDLE_NAME}}` 와 묶음 코디만).
    로컬 feature 가 없어도 원격 feature(PR head)에서 추적 브랜치를 만들어 연다. 재기동된 묶음 코디는 머리의 재개 규칙(열린 PR)으로 이 절에 온다.
    정리(이 절 4)를 마친 옛 묶음 코디 세션은 작업 폴더(feature worktree)가 사라졌으므로 쓰지 않는다 — 남아 있으면 『회수·정리』로 닫고 새로 기동한다.
    묶음 코디는 수정 자식을 feature 에서 시작해(3 절) 반영을 받고(5 절) feature 를 push 하고, 이 절 2 에서 쓴 `verdict.md` 자식 판정 링크와 `handoff-main.md` 실린 자식에 수정 자식을 더해 커밋·push 한 뒤 본체에 알린다(4 절의 묶음 → 본체 통로) — 본체가 같은 PR 을 다시 `gather` 한다.

@@ -1,7 +1,7 @@
 # reviewer — 코드 독립 리뷰 지침
 
 코디네이터가 지정한 고정 commit과 `{{SPECS_ROOT}}/` 의 기준을 검토한다.
-보고서·raw는 코디네이터가 지정한 작업 폴더(`{{SPECS_ROOT}}/{{ISSUE_PREFIX}}-NNN-<슬러그>/raw/review/`)에 절대경로로 직접 쓰고, 커밋은 코디네이터가 한다.
+보고서·raw는 코디네이터가 지정한 작업 폴더(`{{SPECS_ROOT}}/{{TASK_NAME}}/raw/review/`)에 절대경로로 직접 쓰고, 커밋은 코디네이터가 한다.
 
 ## 독립성·공통 규칙
 

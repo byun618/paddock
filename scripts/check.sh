@@ -20,6 +20,8 @@ declared=$(grep -oE '\{\{[A-Z0-9_]+\}\}' "$README" | sort -u)
 used=$(asset_files | xargs grep -ohE '\{\{[A-Z0-9_]+\}\}' 2>/dev/null | sort -u)
 missing=$(comm -23 <(echo "$used") <(echo "$declared") | sed '/^$/d')
 [ -z "$missing" ] && echo "  ✓ 사용 $(echo "$used" | sed '/^$/d' | wc -l | tr -d ' ')개 전부 선언됨" || bad "선언 안 된 변수: $(echo $missing)"
+assembled=$(asset_files | xargs grep -nE '\{\{ISSUE_PREFIX\}\}-' 2>/dev/null)
+[ -z "$assembled" ] && echo "  ✓ {{ISSUE_PREFIX}}- 로 조립한 이름 0건 (파생 변수 사용)" || bad "{{ISSUE_PREFIX}}- 로 조립함 — TASK_NAME 등 파생 변수를 쓴다: $assembled"
 
 echo "2 마커"
 marker_errors=$(asset_files | while read -r f; do

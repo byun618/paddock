@@ -47,6 +47,16 @@ paddock 이 대상 레포에 복사하는 고정 뼈대다. 층·표기 규약·
 | `{{ROLE}}` | 역할 이름 (`templates/codex-agent.toml`) | `reviewer` |
 | `{{ROLE_DESCRIPTION}}` | 역할 한 줄 설명 | `구현 코드 독립 검토` |
 
+파생 변수 — config 에 두지 않는다. `paddock-render` 가 `ISSUE_PREFIX` 로 만든다(아래는 `ISSUE_PREFIX=LIFE` / 빈 값).
+자산 문서에서 작업·묶음 이름은 `{{ISSUE_PREFIX}}-NNN-…` 처럼 조립하지 말고 이것을 쓴다 — 빈 접두로 `-NNN-…` 가 렌더되는 것을 막는다.
+
+| 변수 | 뜻 | `LIFE` | 빈 값 |
+| --- | --- | --- | --- |
+| `{{TASK_NAME}}` | 작업 이름 = 작업 브랜치·worktree·산출물 폴더 이름 | `LIFE-NNN-<슬러그>` | `<슬러그>` |
+| `{{TASK_REF}}` | 일감을 가리키는 짧은 이름 | `LIFE-NNN` | `<슬러그>` |
+| `{{BUNDLE_NAME}}` | 묶음(체크포인트) 작업 이름 | `LIFE-MMM-<슬러그>` | `<묶음 슬러그>` |
+| `{{BUNDLE_REF}}` | 묶음을 가리키는 짧은 이름 | `LIFE-MMM` | `<묶음 슬러그>` |
+
 config 에만 있는 키 — 자산 문서에는 안 나오고 스크립트가 실행 때 읽는다.
 
 | 키 | 뜻 | 기본 |

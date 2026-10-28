@@ -8,13 +8,13 @@ description: >-
 
 # task-coordinate — 코디네이터 절차 (작업 worktree 세션에서 실행)
 
-전제: task-start 가 만든 작업 worktree(`{{WORKTREE_DIR}}/{{ISSUE_PREFIX}}-NNN-<슬러그>/`, 작업 브랜치 체크아웃) 안이다.
+전제: task-start 가 만든 작업 worktree(`{{WORKTREE_DIR}}/{{TASK_NAME}}/`, 작업 브랜치 체크아웃) 안이다.
 브랜치 규약·게이트 위치는 AGENTS.md, 역할별 모델·effort는 `.agents/defaults.md`, 리뷰어 전환 예외는 `.agents/defaults.rules.md`,
 완료 조건·네이티브 실행 관문은 `.agents/rules/validation.md`. **트래커를 쓰면 일감 상태 전이 시점은 이 문서 §1·§4·§5 첫 줄**(진행 중은 task-start).
 <!-- paddock:module l3 -->
 완료 전이는 release 가 한다.
 <!-- /paddock:module -->
-문서 산출물·원자료는 전부 `{{SPECS_ROOT}}/{{ISSUE_PREFIX}}-NNN-<슬러그>/`(절대경로)에 둔다(AGENTS.md 「산출물 규칙」).
+문서 산출물·원자료는 전부 `{{SPECS_ROOT}}/{{TASK_NAME}}/`(절대경로)에 둔다(AGENTS.md 「산출물 규칙」).
 <!-- paddock:module specs-repo -->
 게이트 시점에 그 폴더만 커밋·push 한다. 작업 브랜치에는 코드만 들어간다.
 <!-- /paddock:module -->
@@ -28,7 +28,7 @@ description: >-
 
 ## 0. 실제 코디네이터 세션 확인
 
-- `{{SPECS_ROOT}}/{{ISSUE_PREFIX}}-NNN-<슬러그>/00-start.md`의 코디네이터·모델/effort·worktree를 확인한다.
+- `{{SPECS_ROOT}}/{{TASK_NAME}}/00-start.md`의 코디네이터·모델/effort·worktree를 확인한다.
   현재 세션과 기록이 다르면 작업을 시작하지 말고 `00-start.md`에 불일치를 기록하고 사용자에게 보고한다.
   재개 시 기존 Run·워커·승인 상태부터 확인하고 중복 기동하지 않는다.
 - **이 세션에서** 트래커 일감 조회(트래커를 쓸 때), 웹 검색 도구의 사용 가능 여부, 지정한 외부 서치 도구의 사용 가능 여부(§1 2), 그리고
@@ -50,7 +50,7 @@ description: >-
 
 트래커를 쓰면 일감을 분석 중으로 전이한다(상태 이름·방법은 task-start 1·5단계의 D3 슬롯).
 
-1. **일감 본문 확보**: 트래커에서 {{ISSUE_PREFIX}}-N 상세를 읽는다(트래커가 없으면 사용자 지시 원문). 작업 폴더 `{{SPECS_ROOT}}/{{ISSUE_PREFIX}}-NNN-<슬러그>/` 는 task-start 가 만들어 둔다.
+1. **일감 본문 확보**: 트래커에서 {{TASK_REF}} 상세를 읽는다(트래커가 없으면 사용자 지시 원문). 작업 폴더 `{{SPECS_ROOT}}/{{TASK_NAME}}/` 는 task-start 가 만들어 둔다.
    **읽은 본문을 `00-analysis.md` 에 스냅샷한다** — 워커가 트래커를 못 읽어도 내용이 빠지지 않는다 (능력 계약 H4).
 2. **외부 서치 — 코디 자체 서치가 먼저, 외부 서치 도구는 판단해서 띄운다**: 코디네이터의 웹 검색(런타임이 제공하는
    웹 검색·페이지 열기 도구) + 코드 읽기 + 짧은 실측을 수 분 하고 나서 외부 서치 도구
@@ -140,7 +140,7 @@ description: >-
   <!-- paddock:design D6 -->
   <!-- adopt 가 쓴다: 이 프로젝트에서 건드리면 안 되는 사용자 데이터·런타임 자원(세션·소켓·포트·DB·설정), 한 번에 하나만 쓰는 직렬 자원, 커밋하지 않을 로컬 사본 -->
   <!-- /paddock:design -->
-- 원자료 규칙: 로그·스냅샷·타이밍 원본을 `{{SPECS_ROOT}}/{{ISSUE_PREFIX}}-NNN-*/raw/<도구>/` 에 둔다 — 워커·리뷰어가 절대경로로 직접 쓰고
+- 원자료 규칙: 로그·스냅샷·타이밍 원본을 `{{SPECS_ROOT}}/{{TASK_NAME}}/raw/<도구>/` 에 둔다 — 워커·리뷰어가 절대경로로 직접 쓰고
   코디가 게이트 시점에 커밋한다. 판정표 "근거" 칸이 가리킬 실물이 없으면 그 항목은 무효
 - **트래커를 쓰면 일감 명세의 첫 단계는 "일감 조회 결과를 원자료로 남기거나, 못 읽으면 그 사실과 오류 원문을 원자료로
   남긴다"** 로 둔다 (능력 계약 H4) — 워커가 본문을 읽었는지를 파일로 판정할 수 있게 한다.
@@ -237,7 +237,7 @@ description: >-
 
 - **리뷰·구현 raw/ 가 작업 폴더에 다 있는지 확인하고 커밋한다** — 회수할 브랜치는 없다. 경쟁이면 탈락
   후보 raw도 보존한다. 구현자의 파일을 코디네이터가 직접 고치지 않는다.
-- 구현 HEAD를 `{{ISSUE_PREFIX}}-NNN-<도구>-final`로 고정한다. 단독 구현에 비교 승자/탈락 후보를 꾸며 쓰지 않는다.
+- 구현 HEAD를 `{{TASK_NAME}}-<도구>-final`로 고정한다. 단독 구현에 비교 승자/탈락 후보를 꾸며 쓰지 않는다.
 - **`verdict.md` 는 라운드 요약표(라운드·대상·높음/중간/낮음·채택/기각)와 판정표만 둔다.** 지적별 판정·사유는
   `reviews.md` 에 있고 verdict 에 다시 옮겨 적지 않는다 — 링크만 건다.
 - 판정표는 `.agents/rules/validation.md` 의 7칸 형식이다 — **원장 칸과 실행 n/총 m 칸을 비워 두지 않는다.**
@@ -271,7 +271,7 @@ git merge <기록된_구현_브랜치>                      # 채택 구현 → 
   워커가 구현 브랜치에 이어 커밋(rN 태그) → 코디네이터가 diff 정독·게이트 재실행·스모크 원자료 검증 후 같은 절에 판정을
   덧붙이고 verdict 요약을 갱신 → 작업 브랜치 머지. 범위가 UI/문구 수준이면 전체 코드 리뷰를 반복하지 않는다
   (가드·기준 경로를 건드리면 재리뷰 판단). 워커 기동·대기는 §4 그대로다.
-- **게이트 ② 기록 — 확인이 끝나면 출고 승인을 요청하기 전에 쓴다.** 셋 다 작업 폴더 `{{SPECS_ROOT}}/{{ISSUE_PREFIX}}-NNN-<슬러그>/` 에 둔다.
+- **게이트 ② 기록 — 확인이 끝나면 출고 승인을 요청하기 전에 쓴다.** 셋 다 작업 폴더 `{{SPECS_ROOT}}/{{TASK_NAME}}/` 에 둔다.
 <!-- paddock:module specs-repo -->
   PR 에 싣지 않는다.
 <!-- /paddock:module -->
@@ -305,7 +305,7 @@ git merge <기록된_구현_브랜치>                      # 채택 구현 → 
 <!-- paddock:module specs-repo -->
      그 폴더를 push 한다. PR 에는 코드만 실린다.
 <!-- /paddock:module -->
-     - `{{SPECS_ROOT}}/{{ISSUE_PREFIX}}-NNN-<슬러그>/handoff-main.md`: {{ISSUE_PREFIX}}-N, 본체 경로, 작업 브랜치·PR base(`{{BASE_BRANCH}}`),
+     - `{{SPECS_ROOT}}/{{TASK_NAME}}/handoff-main.md`: {{TASK_REF}}, 본체 경로, 작업 브랜치·PR base(`{{BASE_BRANCH}}`),
 <!-- paddock:module bundle -->
        (묶음 자식은 base 가 feature 브랜치),
 <!-- /paddock:module -->
@@ -314,12 +314,12 @@ git merge <기록된_구현_브랜치>                      # 채택 구현 → 
        출고 때 본체 세션이 볼 사항,
 <!-- /paddock:module -->
        트래커 일감의 현재 상태와 다음 전이(트래커를 쓸 때). **일감은 완료로 바꾸지 않는다.**
-     - **PR 원고 `{{SPECS_ROOT}}/{{ISSUE_PREFIX}}-NNN-<슬러그>/pr.md`**:
+     - **PR 원고 `{{SPECS_ROOT}}/{{TASK_NAME}}/pr.md`**:
 <!-- paddock:module bundle -->
        묶음 자식은 쓰지 않는다(묶음 PR 원고는 묶음 코디 — [묶음 코디 절차](references/bundle.md) 6).
 <!-- /paddock:module -->
        기존 문서를 옮겨 붙이지 말고 diff(`git diff origin/{{BASE_BRANCH}}...HEAD`)와
-       산출물을 읽고 **PR 을 읽는 사람 기준으로** 새로 쓴다. 첫 줄 `# <제목>` = PR 제목(무엇이 바뀌는지 한 줄, `{{ISSUE_PREFIX}}-NNN:` 은 없으면 스크립트가 붙인다),
+       산출물을 읽고 **PR 을 읽는 사람 기준으로** 새로 쓴다. 첫 줄 `# <제목>` = PR 제목(무엇이 바뀌는지 한 줄, 일감 ID 접두(`<ID>:`)는 없으면 스크립트가 붙인다 — ID 없는 프로젝트는 붙지 않는다),
        나머지 = 본문: 왜(문제·증상) → 무엇을 바꿨나(사용자에게 보이는 변화 먼저, 구현 요점은 그 뒤) → 확인한 것(실제 실행 근거 한두 줄).
        리뷰 라운드·게이트·판정표 같은 내부 절차는 쓰지 않는다 — 판정문 위치는 스크립트가 붙인다.
        코드 레포가 공개될 수 있으므로 원자료 경로·내부 세션 정보를 본문에 옮기지 않는다.
@@ -328,24 +328,24 @@ git merge <기록된_구현_브랜치>                      # 채택 구현 → 
 <!-- /paddock:module -->
        원고가 없거나 첫 줄이 제목이 아니면 `task-pr.sh` 가 push 전에 멈춘다.
   2. **작업 worktree 에서 PR 을 연다.** `task-pr.sh` 는 레포를 git 공통 디렉터리에서 찾으므로 작업 worktree 의 사본으로 돌려도 본체 레포를 가리킨다.
-     - `scripts/task-pr.sh {{ISSUE_PREFIX}}-NNN-<슬러그>` — 미커밋 거절 → push → {{BASE_BRANCH}} 대상 PR 생성(있으면 재사용, 멱등).
-       본문은 `pr.md` 그대로에 판정문 위치·서명이 붙는다. `gh pr list --head {{ISSUE_PREFIX}}-NNN-<슬러그>` 로 1건을 확인한다.
+     - `scripts/task-pr.sh {{TASK_NAME}}` — 미커밋 거절 → push → {{BASE_BRANCH}} 대상 PR 생성(있으면 재사용, 멱등).
+       본문은 `pr.md` 그대로에 판정문 위치·서명이 붙는다. `gh pr list --head {{TASK_NAME}}` 로 1건을 확인한다.
 <!-- paddock:module bundle -->
      - 묶음 자식: PR 을 열지 않는다 — feature 반영은 3단계 정리가 한다.
 <!-- /paddock:module -->
   3. **정리까지 한다.** 정리는 작업 worktree 를 지우므로 **코디 세션의 마지막 실행**이다 — 이후 도구 호출을 하지 않는다.
      `task-finish.sh` 는 작업 worktree 안 실행을 거절하므로 본체 경로에서 본체의 스크립트로 돌린다.
-     - `cd <본체 절대경로> && scripts/task-finish.sh {{ISSUE_PREFIX}}-NNN-<슬러그>` — PR 이 있고 로컬 작업 브랜치가 원격 사본과
+     - `cd <본체 절대경로> && scripts/task-finish.sh {{TASK_NAME}}` — PR 이 있고 로컬 작업 브랜치가 원격 사본과
        같음을 확인한 뒤 작업·구현 worktree, 로컬 브랜치, 구현 브랜치 원격 사본을 정리한다.
-       작업 브랜치는 원격(PR head)에 남는다. 태그 `{{ISSUE_PREFIX}}-NNN-*-final` 은 유지한다.
+       작업 브랜치는 원격(PR head)에 남는다. 태그 `{{TASK_NAME}}-*-final` 은 유지한다.
 <!-- paddock:module bundle -->
-     - 묶음 자식: `cd <본체 절대경로> && scripts/task-finish.sh {{ISSUE_PREFIX}}-NNN-<슬러그> --into {{BUNDLE_PREFIX}}{{ISSUE_PREFIX}}-MMM-<슬러그>` — feature 로
+     - 묶음 자식: `cd <본체 절대경로> && scripts/task-finish.sh {{TASK_NAME}} --into {{BUNDLE_PREFIX}}{{BUNDLE_NAME}}` — feature 로
        로컬 merge·push 한 뒤 정리한다. 자식 코디는 여기까지다 — 정리 뒤엔 세션이 없으므로 정리 **직전에** 묶음 코디에게
        반영 시작을 알린다. 알림의 뜻·통로·실패 시 정정은 묶음 코디 절차 4 「반영 알림」이 원본이다.
        묶음 마무리는 마지막 자식이어도 **묶음 코디**가 한다 — [묶음 코디 절차](references/bundle.md) 6.
 <!-- /paddock:module -->
   4. 사용자에게 스크립트 출력 원문과 함께 **PR 번호**, 인계 문서 경로
-     `{{SPECS_ROOT}}/{{ISSUE_PREFIX}}-NNN-<슬러그>/handoff-main.md`(절대경로) 를 보고하고 "PR 생성·정리 완료"라고 끝낸다.
+     `{{SPECS_ROOT}}/{{TASK_NAME}}/handoff-main.md`(절대경로) 를 보고하고 "PR 생성·정리 완료"라고 끝낸다.
 <!-- paddock:module bundle -->
      묶음 자식은 PR 번호 대신 feature 반영 결과를 보고한다.
 <!-- /paddock:module -->

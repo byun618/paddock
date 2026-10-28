@@ -13,12 +13,12 @@
   이 코드 레포에는 공개해도 되는 것만 둔다 — 원자료·작업 문서를 커밋하지 않는다
 <!-- /paddock:module -->
 <!-- paddock:module l1 -->
-- 작업 하나 = `{{SPECS_ROOT}}/{{ISSUE_PREFIX}}-NNN-<슬러그>/` 폴더. 단계 산출물은 번호 파일 (00-analysis.md, 01-criteria.md, …)
+- 작업 하나 = `{{SPECS_ROOT}}/{{TASK_NAME}}/` 폴더. 단계 산출물은 번호 파일 (00-analysis.md, 01-criteria.md, …)
 <!-- /paddock:module -->
 <!-- paddock:module specs-repo -->
 - **쓰기와 커밋** — 본체·코디·워커·리뷰어 모두 그 폴더에 **절대경로로 직접** 쓴다(worktree 안 상대경로 금지).
   커밋은 그 일감의 코디(00-start 는 시작한 세션 — 본체)만, 게이트 시점에, **자기 폴더만** 한다:
-  `git -C {{SPECS_ROOT}} add -- {{ISSUE_PREFIX}}-NNN-<슬러그>/ && git -C {{SPECS_ROOT}} commit -m "…" -- {{ISSUE_PREFIX}}-NNN-<슬러그>/ && git -C {{SPECS_ROOT}} push` (경로는 절대경로로).
+  `git -C {{SPECS_ROOT}} add -- {{TASK_NAME}}/ && git -C {{SPECS_ROOT}} commit -m "…" -- {{TASK_NAME}}/ && git -C {{SPECS_ROOT}} push` (경로는 절대경로로).
   여러 일감이 한 working copy 를 같이 쓰므로 남의 폴더를 add 하지 않고, `index.lock` 이면 잠시 뒤 다시 한다. 워커·리뷰어는 커밋하지 않는다.
   루트 공용 파일(00-project.md 등)은 바꾼 세션(본체 또는 그 일감의 코디)이 그 파일만 지정해 커밋한다
 <!-- /paddock:module -->
@@ -38,13 +38,13 @@
 스킬은 **능력 이름**으로만 말하고 명령은 .agents/harness/ 의 도구별 매핑에 있다 —
 어느 매핑을 열지는 .agents/harness/capabilities.md 의 「매핑 선택」 한 곳에서 정한다.
 
-| 단계 | 누가 | 산출물 (`{{SPECS_ROOT}}/{{ISSUE_PREFIX}}-NNN-<슬러그>/`) | 절차 |
+| 단계 | 누가 | 산출물 (`{{SPECS_ROOT}}/{{TASK_NAME}}/`) | 절차 |
 | --- | --- | --- | --- |
 | 0 시작 — 작업 브랜치·worktree·코디 기동 | 본체 | 00-start.md | task-start |
 | 1 분석 — 일감 스냅샷·외부 서치 대조 | 코디 | 00-analysis.md | task-coordinate §1 |
 | 2 판정 기준 — 구현 전에 박는다 | 코디 | 01-criteria.md | §2 |
 | 3 킥오프 → **게이트 ⓪** | 코디 | 02-kickoff.md | §3 |
-| 4 구현 — 단독 워커, 설계 단계 없음(경쟁은 옵션) | 워커 | 구현 브랜치 `{{ISSUE_PREFIX}}-NNN-<슬러그>-<구현 도구>` | §4 |
+| 4 구현 — 단독 워커, 설계 단계 없음(경쟁은 옵션) | 워커 | 구현 브랜치 `{{TASK_NAME}}-<구현 도구>` | §4 |
 | 5 코드 리뷰 — 별도 세션, 재리뷰도 새 세션 | 리뷰어 | raw/review/, reviews.md | §5 |
 | 6 판정 → **게이트 ①** | 코디 | verdict.md | §6·§7 |
 | 7 사용자 확인 → **게이트 ②** = 기록·PR 생성·정리 | 코디 | devlog.md, learnings-proposal.md, adr-draft-*.md, handoff-main.md, pr.md | §8 |
@@ -80,7 +80,7 @@
 
 ## 브랜치 규약
 
-- 작업 브랜치 `{{ISSUE_PREFIX}}-NNN-<슬러그>` 는 {{BASE_BRANCH}} 에서 분기, 작업 하나의 수명만 갖는다 —
+- 작업 브랜치 `{{TASK_NAME}}` 는 {{BASE_BRANCH}} 에서 분기, 작업 하나의 수명만 갖는다 —
   PR 을 열면 로컬은 정리하고 원격만 남긴다. 머지 후 원격도 삭제 (단명 원칙 유지)
 - **{{BASE_BRANCH}} 반영은 PR 머지로만** — {{BASE_BRANCH}} 직접 push·웹 UI 머지 금지
 <!-- /paddock:module -->
@@ -90,7 +90,7 @@
   {{BASE_BRANCH}} 에 직접 올라가는 것은 release.sh 의 태그뿐이다
 <!-- /paddock:module -->
 <!-- paddock:module bundle -->
-- **묶음 브랜치 `{{BUNDLE_PREFIX}}{{ISSUE_PREFIX}}-NNN-<슬러그>`** (NNN = 체크포인트): 서로 의존하는 작업 묶음만(체크포인트 시작 — task-coordinate references/bundle.md 2). 자식 작업 브랜치는 묶음 브랜치에서
+- **묶음 브랜치 `{{BUNDLE_PREFIX}}{{BUNDLE_NAME}}`** (체크포인트 작업 이름): 서로 의존하는 작업 묶음만(체크포인트 시작 — task-coordinate references/bundle.md 2). 자식 작업 브랜치는 묶음 브랜치에서
   따고 묶음 브랜치로 로컬 merge, 묶음이 끝나면 묶음 브랜치 → {{BASE_BRANCH}} PR 하나. 기본 브랜치({{BASE_BRANCH}})가 움직이면 그 브랜치를 묶음 브랜치로 merge(rebase 금지 —
   살아 있는 worktree). 독립 작업은 {{BASE_BRANCH}} 에서 따고 {{BASE_BRANCH}} 대상 PR. 그 외 체크포인트·프로젝트 단위 통합 브랜치는 금지
 <!-- /paddock:module -->

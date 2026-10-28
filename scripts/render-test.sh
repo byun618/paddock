@@ -107,5 +107,16 @@ rm "$T/k/.claude/rules"
 "$C" "$T/k" > "$T/out"; rc=$?
 check "심링크 지움 → 실패" '[ $rc = 1 ] && grep -q "심링크 없음: .claude/rules" "$T/out"'
 
+echo "R7 파생 변수 — ID 접두 있음·없음 (l1 l2 bundle specs-repo, bare)"
+for p in LIFE ''; do
+  d="$T/id-${p:-none}"
+  cfg "$d.sh" "l1 l2 bundle specs-repo"
+  printf 'PADDOCK_HARNESS=bare\nISSUE_PREFIX=%s\nSPECS_ROOT=../demo-specs\nBASE_BRANCH=main\nBUNDLE_PREFIX=feature/\nMAX_FIX_ROUNDS=3\n' "$p" >> "$d.sh"
+  "$R" render --config "$d.sh" --out "$d" >/dev/null 2>"$T/err"; rc=$?
+  check "ISSUE_PREFIX='$p' 렌더 → exit 0, 남은 {{VAR}} 0" '[ $rc = 0 ] && ! grep -rqE "\{\{[A-Z][A-Z0-9_]*\}\}" "$d"'
+done
+check "접두 있음 → 작업 이름 LIFE-NNN-<슬러그>" 'grep -rq "LIFE-NNN-<슬러그>" "$T/id-LIFE"'
+check "접두 없음 → 문서에 -NNN·-MMM 조각 0, 작업 이름 <슬러그>" '! grep -rqE --include="*.md" "(^|[^A-Za-z])-(NNN|MMM)" "$T/id-none" && grep -rq "demo-specs/<슬러그>/" "$T/id-none"'
+
 echo "통과 $pass · 실패 $fail"
 [ "$fail" = 0 ]

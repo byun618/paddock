@@ -77,6 +77,14 @@ cmd_render() {
   # shellcheck disable=SC1090
   . "$config" || die "render: config 를 읽지 못했다: $config"
   : "${PADDOCK_VERSION:?config 에 PADDOCK_VERSION 이 없다}" "${PADDOCK_MODULES=}" "${PADDOCK_HARNESS=}"
+  # 파생 변수 — config 에 두지 않는다. ISSUE_PREFIX 로 정해진다(빈 값 = ID 없음 모드: 작업 이름 = 슬러그)
+  if [ -n "${ISSUE_PREFIX+x}" ]; then
+    if [ -n "$ISSUE_PREFIX" ]; then
+      TASK_NAME="$ISSUE_PREFIX-NNN-<슬러그>" TASK_REF="$ISSUE_PREFIX-NNN" BUNDLE_NAME="$ISSUE_PREFIX-MMM-<슬러그>" BUNDLE_REF="$ISSUE_PREFIX-MMM"
+    else
+      TASK_NAME="<슬러그>" TASK_REF="<슬러그>" BUNDLE_NAME="<묶음 슬러그>" BUNDLE_REF="<묶음 슬러그>"
+    fi
+  fi
   local v
   for v in $(cd "$ASSETS" && find . -type f ! -name .gitkeep ! -path ./README.md -print0 | xargs -0 grep -ohE '\{\{[A-Z][A-Z0-9_]*\}\}' | tr -d '{}' | sort -u); do
     if [ -n "${!v+x}" ]; then export "PADDOCK_V_$v=${!v}"; fi
