@@ -56,9 +56,10 @@ broken=$(find -L assets -type l | sort)
 
 echo "5 공개"
 # 패턴을 쪼개 적어 이 파일 자신도 검사 대상에 남긴다
-pat="LIFE""-[0-9]|/Us""ers/|corral""-specs"
+# 이식 원본(corral 앱) 내부 경로·내부 구현 이름도 — 매핑은 CLI 계약만 담는다
+pat="LIFE""-[0-9]|/Us""ers/|corral""-specs|app""/src|app""/cli/|her""dr"
 hits=$(git ls-files -co --exclude-standard | xargs grep -nE "$pat" 2>/dev/null)
-[ -z "$hits" ] && echo "  ✓ 일감 번호·홈 경로·비공개 레포 이름 0건" || { echo "$hits" | while read -r l; do bad "$l"; done; fail=1; }
+[ -z "$hits" ] && echo "  ✓ 일감 번호·홈 경로·비공개 레포 이름·이식 원본 내부 경로 0건" || { echo "$hits" | while read -r l; do bad "$l"; done; fail=1; }
 
 [ "$fail" = 0 ] && echo "통과" || echo "실패"
 exit "$fail"
