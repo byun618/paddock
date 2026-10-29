@@ -9,11 +9,12 @@
 ### Added
 
 - `paddock-render sync` — 이미 들인 대상을 새 버전·바뀐 config 로 맞춘다. 대상 manifest 해시를 지난 렌더로 쓰는 3-way:
-  손대지 않은 고정부는 갱신, 설계 슬롯 내용은 ID·순번으로 옮김, 빠진 파일은 지움. 프로젝트가 고친 고정부·고아 슬롯은 충돌로 멈추고 아무것도 쓰지 않는다
+  손대지 않은 고정부·링크는 갱신, 설계 슬롯 내용은 ID·순번으로 옮김, 빠진 파일은 지움. 프로젝트가 고친 고정부·고아 슬롯은 충돌로 멈추고 아무것도 쓰지 않는다.
+  쓰다가 실패하면 lock 을 바꾸지 않고 exit 1, 버전을 내리는 sync 는 `--allow-downgrade` 로만
 - `sync` 스킬 — 버전 비교 → 계획(`sync --dry-run`) → 재감사(새 슬롯·바뀐 seed·CHANGELOG 「재감사」·새 변수) → 승인 게이트 → 쓰기 → 검증·이력.
   충돌은 사유별 선택지로 보이고, 끝에 프로젝트 learnings 중 일반적인 것을 paddock 에 되돌려 보낼 초안을 낸다(생성은 승인 뒤)
-- config `PADDOCK_SKIP` — 깔지 않기로 한 경로. render·sync 가 따른다(manifest 를 손으로 고치면 다음 sync 가 되살린다)
-- `paddock-render version`, `paddock-check` 의 플러그인 버전 알림
+- config `PADDOCK_SKIP` — 깔지 않기로 한 경로(레포 상대). render·sync 가 따른다(manifest 를 손으로 고치면 다음 sync 가 되살린다)
+- `paddock-render version`, `paddock-check` 의 플러그인 버전 알림(대상이 낮을 때)
 - 시험 `scripts/sync-test.sh`(변이 대조) · `scripts/upgrade-test.sh`(지난 태그 → 작업 트리 실제 갱신)
 
 ### Changed

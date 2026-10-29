@@ -31,7 +31,7 @@ printf '<!-- paddock:fixed -->\n같음\n' > "$A/same.md"
 printf '<!-- paddock:fixed -->\n사라질 파일\n' > "$A/gone.md"
 { printf 'g\n'; slot D8 여덟; } > "$A/gonem.md"
 printf '<!-- paddock:seed -->\nseed v1\n' > "$A/s.md"
-ln -s same.md "$A/lk"
+ln -s same.md "$A/lk"; ln -s same.md "$A/lk3"
 mkdir -p "$A/d" "$A/old"; : > "$A/d/.gitkeep"; : > "$A/old/.gitkeep"; printf '<!-- paddock:fixed -->\n빈 폴더 안의 지난 파일\n' > "$A/d/was.md"
 printf 'a/\n' > "$A/gitignore.fragment"
 printf '<!-- paddock:fixed -->\n모듈 파일\n' > "$V1/assets/extra/e.md"
@@ -43,7 +43,8 @@ printf '<!-- paddock:fixed -->\n같음\n' > "$A/same.md"
 printf 'o\no v2\n' > "$A/o.md"
 printf '<!-- paddock:seed -->\nseed v2\n' > "$A/s.md"
 printf '#!/bin/sh\n# paddock:fixed\necho new\n' > "$A/new.sh"; chmod +x "$A/new.sh"
-ln -s same.md "$A/lk"; ln -s a.md "$A/lk2"
+ln -s same.md "$A/lk"; ln -s a.md "$A/lk2"; ln -s a.md "$A/lk3"
+{ printf 'n\n'; slot D4 넷; } > "$A/n.md"
 mkdir -p "$A/d"; : > "$A/d/.gitkeep"
 printf 'a/\nb/\n' > "$A/gitignore.fragment"
 printf '<!-- paddock:fixed -->\n모듈 파일\n' > "$V2/assets/extra/e.md"
@@ -53,13 +54,17 @@ if [ -n "${SY_MUTANT:-}" ]; then
   case "$SY_MUTANT" in
     s-slot-keep) sed -i '' '/# guard:s-slot-keep$/ s/if ((k in has) \&\& filled(tb\[k\]))/if (0)/' "$f" ;;
     s-missing) sed -i '' '/# guard:s-missing$/ s/else conflict "\$rel" 만듦 "대상에서 지워졌다"/else plan 만듦 "$rel" x/' "$f" ;;
-    s-orphan) sed -i '' '/# guard:s-orphan$/ s/if \[ -s "\$orph" \]; then/if false; then/' "$f" ;;
-    s-exists) sed -i '' '/# guard:s-exists$/ s/elif \[ "\$ok" = - \]; then conflict/elif false; then conflict/' "$f" ;;
-    s-touched) sed -i '' '/# guard:s-touched$/ s/else conflict "\$rel" 갱신 "고정부를 프로젝트가 고쳤다"/else plan 갱신 "$rel" x/' "$f" ;;
-    s-orphan-del) sed -i '' '/# guard:s-orphan-del$/ s/if \[ -s "\$W\/orph" \]; then/if false; then/' "$f" ;;
-    s-touched-del) sed -i '' '/# guard:s-touched-del$/ s/else conflict "\$rel" 지움 "새 구성에서 빠지는 파일을 프로젝트가 고쳤다"/else plan 지움 "$rel" x/' "$f" ;;
+    s-orphan) sed -i '' '/# guard:s-orphan$/ s/\[ -s "\$orph" \] \&\& why/false \&\& why/' "$f" ;;
+    s-exists) sed -i '' '/# guard:s-exists$/ s/if \[ "\$ok" = - \]; then why/if false; then why/' "$f" ;;
+    s-touched) sed -i '' '/# guard:s-touched$/ s/elif \[ "\$(content_hash "\$path" "\$ok")" != "\$oh" \]; then why/elif false; then why/' "$f" ;;
+    s-orphan-del) sed -i '' '/# guard:s-orphan-del$/ s/\[ -s "\$W\/orph" \] \&\& why/false \&\& why/' "$f" ;;
+    s-touched-del) sed -i '' '/# guard:s-touched-del$/ s/\[ "\$(content_hash "\$path" "\$ok")" = "\$oh" \] || why/true || why/' "$f" ;;
     s-atomic) sed -i '' '/# guard:s-atomic$/ s/if \[ "\$n_conf" != 0 \]; then/if false; then/' "$f" ;;
-    s-dirs) sed -i '' '/# guard:s-dirs$/ s/mkdir -p "\$target\/\$rel"/true/' "$f" ;;
+    s-dirs) sed -i '' '/# guard:s-dirs$/ s/mkdir -p "\$target\/\$rel" ||/true ||/' "$f" ;;
+    s-link3) sed -i '' '/# guard:s-link3$/ s/elif \[ "\$ok" = link \] \&\& \[ "\$cur" = "\$oh" \]; then plan 링크/elif false; then plan 링크/' "$f" ;;
+    s-wfail) sed -i '' '/# guard:s-wfail$/ s/|| { wfail="\$wfail \$rel"; continue; }/|| true/' "$f" ;;
+    s-downgrade) sed -i '' '/# guard:s-downgrade$/ s/if \[ "\$downgrade" = 0 \] \&\& version_lt/if false \&\& version_lt/' "$f" ;;
+    s-outside) sed -i '' '/# guard:s-outside$/ s/\[ -z "\$bad_paths" \] || die/true || die/' "$f" ;;
     s-link) sed -i '' '/# guard:s-link$/ s/plan 충돌 "\$rel" "심링크 자리에/plan 링크 "$rel" "/' "$f" ;;
     *) echo "모르는 SY_MUTANT: $SY_MUTANT" >&2; exit 2 ;;
   esac
@@ -90,6 +95,8 @@ fresh; sync2; rc=$?
 check "exit 0" S1 '[ $rc = 0 ]'
 check "고정 파일 갱신" S1 'grep -qx "A v2" "$T/t/a.md"'
 check "같은 ID 슬롯 둘을 순서대로 보존 + 고정부 갱신" S1 '[ "$(grep -E "^내 |^z " "$T/t/m.md" | tr "\n" " ")" = "내 D1 내 D2-1 내 D2-2 z v2 " ]'
+check "새로 생기는 managed 파일의 슬롯도 「새 슬롯」 보고" S1 'grep -q "만듦	n.md	새 파일" "$T/out" && grep -q "새 슬롯	n.md	D4#1" "$T/out"'
+check "지난 그대로인 링크는 새 대상으로 갱신 (충돌 아님)" S1 '[ "$(readlink "$T/t/lk3")" = a.md ] && grep -q "링크	lk3	링크 대상 갱신" "$T/out"'
 check "새 슬롯 D3 은 힌트째 비어 있고 계획에 보고" S1 'grep -q "<!-- 셋 힌트 -->" "$T/t/m.md" && grep -q "새 슬롯	m.md	D3#1" "$T/out"'
 check "빠진 파일·빈 폴더 지움" S1 '[ ! -e "$T/t/gone.md" ] && [ ! -e "$T/t/gonem.md" ] && [ ! -e "$T/t/old" ]'
 check "빠진 파일을 지워 비게 된 폴더라도 새 manifest 의 폴더(d)는 남는다" S1 '[ ! -e "$T/t/d/was.md" ] && [ -d "$T/t/d" ]'
@@ -117,6 +124,10 @@ check "--take-new a.md → 새 것으로, 나머지도 반영" S2t '[ $rc = 0 ] 
 echo "S3 고아 슬롯"
 fresh; sed -i '' 's/^<!-- 아홉 힌트 -->$/내 D9/' "$T/t/o.md"; conflict_case S3 "새 렌더에 없는 슬롯에 내용" "충돌	o.md	고아 슬롯.*D9#1"
 fresh; sed -i '' 's/^<!-- 여덟 힌트 -->$/내 D8/' "$T/t/gonem.md"; conflict_case S3d "빠지는 파일의 슬롯에 내용" "충돌	gonem.md	고아 슬롯.*D8#1"
+
+fresh; sed -i '' 's/^<!-- 아홉 힌트 -->$/내 D9/; s/^o v1$/o v1 내가 고침/' "$T/t/o.md"; conflict_case S3b "고아 슬롯 + 고정부 수정이 겹침 → 사유 둘 다" "충돌	o.md	고아 슬롯.*D9#1.* + 고정부를 프로젝트가 고쳤다"
+sync2 --take-new o.md; rc=$?
+check "겹친 충돌을 보고 --take-new → 새 것으로" S3t '[ $rc = 0 ] && [ "$(cat "$T/t/o.md" | tr "\n" " ")" = "o o v2 " ]'
 
 echo "S4 빠지는 파일을 프로젝트가 고침"
 fresh; echo "내 수정" >> "$T/t/gone.md"; conflict_case S4 "빠지는 고정 파일 수정" "충돌	gone.md	새 구성에서 빠지는 파일을 프로젝트가 고쳤다"
@@ -153,6 +164,34 @@ printf 'PADDOCK_SKIP="lk"\n' >> "$T/t/.paddock/config.sh"
 "$V2/bin/paddock-render" render --config "$T/t/.paddock/config.sh" --out "$T/r2s" >/dev/null
 TMPDIR="$T/tmp" "$V2/bin/paddock-render" sync "$T/r2s" "$T/t" > "$T/out" 2>&1; rc=$?
 check "config 에 PADDOCK_SKIP=lk → 충돌 없음, 폴더 그대로, 지움 대상도 아님" S11 '[ $rc = 0 ] && grep -qx "서브에이전트" "$T/t/lk/x.md" && ! grep -q "	lk	" "$T/out" && grep -q "PADDOCK_SKIP=\"lk\"" "$T/t/.paddock/config.sh"'
+
+echo "S12 쓰기 실패 — lock 을 바꾸지 않고 exit 1, 고친 뒤 다시 돌리면 이어진다"
+fresh; chmod 444 "$T/t/a.md"; sync2; rc=$?
+check "읽기 전용 a.md → exit 1, 못 쓴 목록, manifest·config 는 지난 것" S12 '[ $rc = 1 ] && grep -q "일부만 썼다.*a.md" "$T/out" && cmp -s "$T/base/.paddock/manifest.tsv" "$T/t/.paddock/manifest.tsv" && grep -qx "PADDOCK_VERSION=1.0.0" "$T/t/.paddock/config.sh"'
+chmod 644 "$T/t/a.md"; sync2; rc=$?
+check "권한을 고치고 다시 → exit 0, a.md 갱신, check 통과" S12 '[ $rc = 0 ] && grep -qx "A v2" "$T/t/a.md" && "$V2/bin/paddock-check" "$T/t" >/dev/null 2>&1'
+
+echo "S13 다운그레이드"
+fresh; sync2 >/dev/null; TMPDIR="$T/tmp" "$V2/bin/paddock-render" sync "$T/r1" "$T/t" > "$T/out" 2>&1; rc=$?
+check "2.0.0 대상에 1.0.0 렌더 → exit 2, 그대로" S13 '[ $rc = 2 ] && grep -q "보다 낮다" "$T/out" && grep -qx "PADDOCK_VERSION=2.0.0" "$T/t/.paddock/config.sh"'
+TMPDIR="$T/tmp" "$V2/bin/paddock-render" sync "$T/r1" "$T/t" --allow-downgrade > "$T/out" 2>&1; rc=$?
+check "--allow-downgrade → exit 0, 1.0.0" S13 '[ $rc = 0 ] && grep -qx "PADDOCK_VERSION=1.0.0" "$T/t/.paddock/config.sh"'
+
+echo "S15 paddock-check 버전 알림 — 대상이 낮을 때만"
+fresh; "$V2/bin/paddock-check" "$T/t" > "$T/out" 2>&1
+check "대상 1.0.0 · 플러그인 2.0.0 → sync 알림" S15 'grep -q "플러그인은 2.0.0 — 고정 자산을 맞추려면 paddock sync" "$T/out"'
+"$V1/bin/paddock-check" "$T/t" > "$T/out" 2>&1
+check "같은 버전 → 알림 없음" S15 '! grep -q "고정 자산을 맞추려면" "$T/out"'
+sync2 >/dev/null; "$V1/bin/paddock-check" "$T/t" > "$T/out" 2>&1
+check "대상 2.0.0 · 플러그인 1.0.0 → 알림 없음" S15 '! grep -q "고정 자산을 맞추려면" "$T/out"'
+
+echo "S14 레포 밖 경로·「이름=값」 꼴 대상"
+fresh; mkdir -p "$T/victim"; printf 'v\n' > "$T/victim/v.txt"
+printf '../victim/v.txt\tfixed\t%s\n' "$(shasum -a 256 < "$T/victim/v.txt" | cut -c1-64)" >> "$T/t/.paddock/manifest.tsv"
+sync2; rc=$?
+check "manifest 에 ../ 경로 → exit 2, 대상 밖 파일 그대로" S14 '[ $rc = 2 ] && grep -q "레포 밖" "$T/out" && [ -f "$T/victim/v.txt" ]'
+rm -rf "$T/a=b"; cp -R "$T/base" "$T/a=b"; (cd "$T" && TMPDIR="$T/tmp" "$V2/bin/paddock-render" sync r2 a=b > "$T/out" 2>&1); rc=$?
+check "상대 경로 대상 a=b → 정상 갱신" S14 '[ $rc = 0 ] && grep -qx "A v2" "$T/a=b/a.md"'
 
 echo "S10 임시 폴더"
 check "성공·충돌·dry-run 어느 쪽이든 sync 임시 폴더가 남지 않는다" S10 '[ -z "$(ls -A "$T/tmp")" ]'

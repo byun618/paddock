@@ -10,17 +10,19 @@
 #       렌더 결과를 대상에 들인다. 없는 파일은 만들고, 같은 파일은 건너뛰고, seed 는 이미 있으면 두고,
 #       내용이 다른 기존 파일은 「충돌」 로 적고 아무것도 쓰지 않는다(exit 3). gitignore.fragment 는 .gitignore 에 덧붙인다.
 #       .paddock/config.sh 와 manifest.tsv 는 paddock 의 상태라 늘 덮어쓴다.
-#   paddock-render sync <렌더 폴더> <대상 레포> [--dry-run] [--take-new <경로>]…
+#   paddock-render sync <렌더 폴더> <대상 레포> [--dry-run] [--take-new <경로>]… [--allow-downgrade]
 #       이미 들인 대상을 새 렌더(새 버전 또는 바뀐 config)로 맞춘다. 대상 manifest 해시가 「지난 렌더」다 —
 #       고정부가 지난 해시와 같으면 새 것으로 바꾸고(설계 슬롯 내용은 ID·순번으로 옮겨 담음), 빠진 파일은 지운다.
 #       프로젝트가 고친 고정부·내용이 남은 고아 슬롯·자리를 차지한 기존 파일은 「충돌」 — 하나라도 있으면 아무것도 쓰지 않는다(exit 3).
 #       --take-new <경로>: 그 경로의 충돌은 프로젝트 쪽을 버리고 새 것으로 (사용자가 고른 경로만). seed 는 쓰지 않는다.
+#       쓰다가 실패하면 lock(.paddock/manifest·config)을 바꾸지 않고 exit 1 — 원인을 고쳐 다시 돌리면 이어진다.
+#       새 렌더 버전이 대상보다 낮으면 거절한다(--allow-downgrade 로만).
 #   paddock-render version
 #       이 플러그인의 버전 (.claude-plugin/plugin.json)
 #
 # config.sh: PADDOCK_MODULES("l1 l2 bundle" 처럼 켠 모듈) · PADDOCK_HARNESS(bare|corral) · PADDOCK_SKIP(깔지 않을 경로) · 자산 변수들.
 #   PADDOCK_VERSION 은 render 가 플러그인 버전으로 쓴다 — config 의 값은 지난 렌더의 버전일 뿐이다.
-# 종료코드: 0 성공 · 2 사용법/입력 오류 · 3 apply·sync 충돌 · 4 렌더 실패(미정의 변수·마커 오류)
+# 종료코드: 0 성공 · 1 sync 쓰기 일부 실패 · 2 사용법/입력 오류 · 3 apply·sync 충돌 · 4 렌더 실패(미정의 변수·마커 오류)
 set -u
 
 PLUGIN_ROOT=$(cd "$(dirname "$0")/.." && pwd)
@@ -31,6 +33,8 @@ sha() { if command -v shasum >/dev/null 2>&1; then shasum -a 256 | cut -c1-64; e
 has_word() { case " $1 " in *" $2 "*) return 0 ;; esac; return 1; }
 # PADDOCK_SKIP(공백으로 나눈 경로들) 이거나 그 아래면 렌더하지 않는다 — 프로젝트가 깔지 않기로 한 항목. sync 도 같은 config 로 렌더해 이 결정이 이어진다
 skipped() { local p; for p in ${PADDOCK_SKIP:-}; do case "$1" in "$p"|"$p"/*) return 0 ;; esac; done; return 1; }
+# a < b 인가 (점으로 나눈 숫자 비교, 접미 -… 는 무시). 둘 중 하나가 비면 거짓
+version_lt() { [ -n "$1" ] && [ -n "$2" ] && awk -v a="${1%%-*}" -v b="${2%%-*}" 'BEGIN { n = split(a, x, "."); m = split(b, y, "."); for (i = 1; i <= (n > m ? n : m); i++) { if (x[i] + 0 < y[i] + 0) exit 0; if (x[i] + 0 > y[i] + 0) exit 1 } exit 1 }'; }
 plugin_version() { sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$PLUGIN_ROOT/.claude-plugin/plugin.json" 2>/dev/null | head -n 1; }
 
 # 파일 종류: 첫 두 줄의 paddock:fixed / paddock:seed, 아니면 design 마커가 있으면 managed, 아니면 fixed
@@ -90,6 +94,15 @@ cmd_render() {
   # shellcheck disable=SC1090
   . "$config" || die "render: config 를 읽지 못했다: $config"
   : "${PADDOCK_MODULES=}" "${PADDOCK_HARNESS=}" "${PADDOCK_SKIP=}"
+  # PADDOCK_SKIP 정규화 — 레포 상대 경로만(앞 ./ 와 끝 / 는 떼고), 절대 경로·..·글롭은 거절
+  local skip_in=$PADDOCK_SKIP s; PADDOCK_SKIP=""
+  set -f
+  for s in $skip_in; do
+    s=${s#./}; s=${s%/}
+    case "$s" in ""|/*|..|../*|*/..|*/../*|*[\*\?\[]*) set +f; die "render: PADDOCK_SKIP 에 쓸 수 없는 경로: $s — 레포 상대 경로로, .. 과 글롭 없이" ;; esac # guard:r-skip
+    PADDOCK_SKIP="$PADDOCK_SKIP $s"
+  done
+  set +f
   PADDOCK_VERSION=$(plugin_version)
   [ -n "$PADDOCK_VERSION" ] || die "render: 플러그인 버전을 읽지 못했다: $PLUGIN_ROOT/.claude-plugin/plugin.json"
   # 파생 변수 — config 에 두지 않는다. ISSUE_PREFIX 로 정해진다(빈 값 = ID 없음 모드: 작업 이름 = 슬러그)
@@ -121,6 +134,7 @@ cmd_render() {
   fi
 
   mkdir -p "$out/.paddock" || die "render: --out 을 만들지 못했다"
+  out=$(cd "$out" && pwd) # 절대 경로로 — awk 는 「이름=값」 꼴 인자를 변수 대입으로 읽는다
   { echo "PADDOCK_VERSION=$PADDOCK_VERSION"; grep -v '^PADDOCK_VERSION=' "$config"; } > "$out/.paddock/config.sh"
   local manifest="$out/.paddock/manifest.tsv" failed=0 layer src rel dst kind
   printf '# paddock %s manifest — 경로\t종류\t해시\n' "$PADDOCK_VERSION" > "$manifest.tmp"
@@ -231,18 +245,25 @@ slot_merge() {
 }
 
 cmd_sync() {
-  local stage="" target="" dry=0 take=""
+  local stage="" target="" dry=0 take="" downgrade=0
   while [ $# -gt 0 ]; do
     case "$1" in
       --dry-run) dry=1; shift ;;
       --take-new) [ $# -ge 2 ] || die "sync: --take-new 값이 없다"; take="$take$2
 "; shift 2 ;;
+      --allow-downgrade) downgrade=1; shift ;;
       -*) die "sync: 모르는 인자 $1" ;;
       *) if [ -z "$stage" ]; then stage=$1; elif [ -z "$target" ]; then target=$1; else die "sync: 인자가 많다: $1"; fi; shift ;;
     esac
   done
   [ -f "$stage/.paddock/manifest.tsv" ] || die "sync: 렌더 폴더가 아니다(.paddock/manifest.tsv 없음): $stage"
   [ -f "$target/.paddock/manifest.tsv" ] || die "sync: 대상에 .paddock/manifest.tsv 가 없다 — 처음 들이는 것은 apply"
+  # 절대 경로로 — awk 는 「이름=값」 꼴 인자를 파일이 아니라 변수 대입으로 읽는다
+  stage=$(cd "$stage" && pwd) target=$(cd "$target" && pwd)
+  local v_old v_new
+  v_old=$(sed -n 's/^PADDOCK_VERSION=//p' "$target/.paddock/config.sh" 2>/dev/null | head -n 1)
+  v_new=$(sed -n 's/^PADDOCK_VERSION=//p' "$stage/.paddock/config.sh" | head -n 1)
+  if [ "$downgrade" = 0 ] && version_lt "$v_new" "$v_old"; then die "sync: 새 렌더($v_new)가 대상($v_old)보다 낮다 — 플러그인을 갱신하거나, 내리려는 것이면 --allow-downgrade"; fi # guard:s-downgrade
   # 전역 — EXIT trap 은 함수가 끝난 뒤에 돈다
   W=$(mktemp -d "${TMPDIR:-/tmp}/paddock-sync.XXXXXX") || die "sync: 임시 폴더를 만들지 못했다"
   trap 'rm -rf "$W"' EXIT
@@ -255,18 +276,25 @@ cmd_sync() {
     { nk[$1] = $2; nh[$1] = $3; seen[$1] = 1 }
     END { for (r in seen) print r, ((r in ok) ? ok[r] : "-"), ((r in ok) ? oh[r] : "-"), ((r in nk) ? nk[r] : "-"), ((r in nk) ? nh[r] : "-") }
   ' "$target/.paddock/manifest.tsv" "$stage/.paddock/manifest.tsv" | LC_ALL=C sort > "$W/union"
+  # manifest 경로는 레포 안 상대 경로뿐이다 — 대상 밖을 지우거나 쓰지 않는다
+  local bad_paths; bad_paths=$(cut -f1 "$W/union" | grep -E '^/|(^|/)\.\.(/|$)')
+  [ -z "$bad_paths" ] || die "sync: manifest 에 레포 밖을 가리키는 경로가 있다: $(echo "$bad_paths" | tr '\n' ' ')" # guard:s-outside
 
   plan() { printf '%s\t%s\t%s\n' "$1" "$2" "$3" >> "$W/plan"; }
   taken() { printf '%s' "$take" | grep -qxF -- "$1"; }
   conflict() { if taken "$1"; then plan "$2" "$1" "$3 (--take-new)"; else plan 충돌 "$1" "$3"; fi; }
-  local rel ok oh nk nh path new orph fresh
+  local rel ok oh nk nh path new orph fresh cur why
   while IFS="$TAB" read -r rel ok oh nk nh; do
     path="$target/$rel"
     [ "$rel" = gitignore.fragment ] && continue
     case "$nk" in
       dir) if [ -e "$path" ] && [ ! -d "$path" ]; then plan 충돌 "$rel" "폴더 자리에 파일이 있다"
            elif [ ! -d "$path" ]; then plan "폴더 만듦" "$rel" "새 폴더"; fi ;;
-      link) if [ -L "$path" ]; then [ "$(readlink "$path")" = "$nh" ] || conflict "$rel" 링크 "다른 곳을 가리키는 심링크"
+      link) if [ -L "$path" ]; then
+              cur=$(readlink "$path")
+              if [ "$cur" = "$nh" ]; then :
+              elif [ "$ok" = link ] && [ "$cur" = "$oh" ]; then plan 링크 "$rel" "링크 대상 갱신" # guard:s-link3
+              else conflict "$rel" 링크 "다른 곳을 가리키는 심링크"; fi
             elif [ -e "$path" ]; then plan 충돌 "$rel" "심링크 자리에 실제 파일·폴더가 있다" # guard:s-link
             else plan 링크 "$rel" "새 심링크"; fi ;;
       seed) if [ ! -e "$path" ] && [ ! -L "$path" ]; then plan 만듦 "$rel" "seed (대상에 없음)"; mkdir -p "$W/new/$(dirname "$rel")"; cp -p "$stage/$rel" "$W/new/$rel"
@@ -276,16 +304,19 @@ cmd_sync() {
         mkdir -p "$W/new/$(dirname "$rel")"; new="$W/new/$rel"; orph="$W/orph"; fresh="$W/fresh"; : > "$orph"; : > "$fresh"
         if [ ! -e "$path" ]; then
           cp -p "$stage/$rel" "$new"
+          [ "$nk" = managed ] && slot_merge /dev/null "$stage/$rel" /dev/null "$fresh" > /dev/null
           if [ "$ok" = - ]; then plan 만듦 "$rel" "새 파일"; else conflict "$rel" 만듦 "대상에서 지워졌다"; fi # guard:s-missing
-          continue
+        else
+          if [ "$nk" = managed ]; then slot_merge "$path" "$stage/$rel" "$orph" "$fresh" > "$new"
+          else cp -p "$stage/$rel" "$new"; slot_merge "$path" /dev/null "$orph" /dev/null > /dev/null; fi
+          cmp -s "$new" "$path" && continue
+          # 사유는 모두 모은다 — 하나만 보이면 --take-new 가 보이지 않은 수정까지 버린다
+          why=""
+          [ -s "$orph" ] && why="$why + 고아 슬롯(대상에 채웠는데 새 렌더에 자리가 없다: $(sort "$orph" | tr '\n' ' ' | sed 's/ $//'))" # guard:s-orphan
+          if [ "$ok" = - ]; then why="$why + 내용이 다른 기존 파일" # guard:s-exists
+          elif [ "$(content_hash "$path" "$ok")" != "$oh" ]; then why="$why + 고정부를 프로젝트가 고쳤다"; fi # guard:s-touched
+          if [ -n "$why" ]; then conflict "$rel" 갱신 "${why# + }"; else plan 갱신 "$rel" "고정부 갱신"; fi
         fi
-        if [ "$nk" = managed ]; then slot_merge "$path" "$stage/$rel" "$orph" "$fresh" > "$new"
-        else cp -p "$stage/$rel" "$new"; slot_merge "$path" /dev/null "$orph" /dev/null > /dev/null; fi
-        if [ -s "$orph" ]; then conflict "$rel" 갱신 "고아 슬롯 — 대상에 채운 내용이 있는데 새 렌더에 자리가 없다: $(sort "$orph" | tr '\n' ' ')" # guard:s-orphan
-        elif cmp -s "$new" "$path"; then continue
-        elif [ "$ok" = - ]; then conflict "$rel" 갱신 "내용이 다른 기존 파일" # guard:s-exists
-        elif [ "$(content_hash "$path" "$ok")" = "$oh" ]; then plan 갱신 "$rel" "고정부 갱신"
-        else conflict "$rel" 갱신 "고정부를 프로젝트가 고쳤다"; fi # guard:s-touched
         if [ -s "$fresh" ] && ! grep -q "^충돌	$rel	" "$W/plan"; then plan "새 슬롯" "$rel" "$(sort "$fresh" | tr '\n' ' ')— 비어 있음, 재감사가 채운다"; fi ;;
       -) # 새 렌더에서 빠짐 — 지난 그대로면 지운다
         case "$ok" in
@@ -294,9 +325,10 @@ cmd_sync() {
           seed) [ -e "$path" ] && plan "seed 남김" "$rel" "새 구성에 없음 — 프로젝트 파일로 남긴다" ;;
           *) [ -f "$path" ] && [ ! -L "$path" ] || continue
              : > "$W/orph"; slot_merge "$path" /dev/null "$W/orph" /dev/null > /dev/null
-             if [ -s "$W/orph" ]; then conflict "$rel" 지움 "고아 슬롯 — 새 구성에서 빠지는 파일에 채운 내용: $(sort "$W/orph" | tr '\n' ' ')" # guard:s-orphan-del
-             elif [ "$(content_hash "$path" "$ok")" = "$oh" ]; then plan 지움 "$rel" "새 구성에 없음"
-             else conflict "$rel" 지움 "새 구성에서 빠지는 파일을 프로젝트가 고쳤다"; fi ;; # guard:s-touched-del
+             why=""
+             [ -s "$W/orph" ] && why="$why + 고아 슬롯(새 구성에서 빠지는 파일에 채운 내용: $(sort "$W/orph" | tr '\n' ' ' | sed 's/ $//'))" # guard:s-orphan-del
+             [ "$(content_hash "$path" "$ok")" = "$oh" ] || why="$why + 새 구성에서 빠지는 파일을 프로젝트가 고쳤다" # guard:s-touched-del
+             if [ -n "$why" ]; then conflict "$rel" 지움 "${why# + }"; else plan 지움 "$rel" "새 구성에 없음"; fi ;;
         esac ;;
     esac
   done < "$W/union"
@@ -307,28 +339,34 @@ cmd_sync() {
   if [ "$n_conf" != 0 ]; then echo "충돌 ${n_conf}건 — 아무것도 쓰지 않았다"; exit 3; fi # guard:s-atomic
   [ "$dry" = 1 ] && { echo "dry-run: 충돌 없음 — 쓰지 않았다"; exit 0; }
 
-  # 쓴다 — 지우기 먼저(빈 폴더 정리), 그다음 만들기·갱신
-  local act why
+  # 쓴다 — 지우기 먼저(빈 폴더 정리), 그다음 만들기·갱신. 하나라도 실패하면 lock(manifest·config)을 바꾸지 않는다 —
+  # 그래야 다시 돌렸을 때 이미 쓴 파일은 「그대로」, 못 쓴 파일은 다시 「갱신」으로 이어진다
+  local act wfail=""
   while IFS="$TAB" read -r act rel why; do
     path="$target/$rel"
     case "$act" in
-      지움) rm -f "$path"; [ "$(dirname "$rel")" = . ] || (cd "$target" && rmdir -p "$(dirname "$rel")" 2>/dev/null) ;;
-      "링크 지움") rm -f "$path" ;;
+      지움) rm -f "$path" || wfail="$wfail $rel"; [ "$(dirname "$rel")" = . ] || (cd "$target" && rmdir -p "$(dirname "$rel")" 2>/dev/null) ;;
+      "링크 지움") rm -f "$path" || wfail="$wfail $rel" ;;
       "폴더 지움") (cd "$target" && rmdir -p "$rel" 2>/dev/null) ;;
     esac
   done < "$W/plan"
   # 지우며 비운 폴더 정리가 새 manifest 의 빈 폴더까지 지웠을 수 있다 — 다시 세운다
-  awk -F'\t' '!/^#/ && $2 == "dir" {print $1}' "$stage/.paddock/manifest.tsv" | while IFS= read -r rel; do mkdir -p "$target/$rel"; done # guard:s-dirs
+  while IFS= read -r rel; do mkdir -p "$target/$rel" || wfail="$wfail $rel"; done < <(awk -F'\t' '!/^#/ && $2 == "dir" {print $1}' "$stage/.paddock/manifest.tsv") # guard:s-dirs
   while IFS="$TAB" read -r act rel why; do
     path="$target/$rel"
     case "$act" in
-      "폴더 만듦") mkdir -p "$path" ;;
+      "폴더 만듦") mkdir -p "$path" || wfail="$wfail $rel" ;;
       만듦|갱신)
-        mkdir -p "$(dirname "$path")"; cat "$W/new/$rel" > "$path"
+        { mkdir -p "$(dirname "$path")" && cat "$W/new/$rel" > "$path"; } 2>/dev/null || { wfail="$wfail $rel"; continue; } # guard:s-wfail
         if [ -x "$stage/$rel" ]; then chmod +x "$path"; fi ;;
-      링크) rm -f "$path"; mkdir -p "$(dirname "$path")"; ln -s "$(readlink "$stage/$rel")" "$path" ;;
+      링크) { rm -f "$path" && mkdir -p "$(dirname "$path")" && ln -s "$(readlink "$stage/$rel")" "$path"; } || wfail="$wfail $rel" ;;
     esac
   done < "$W/plan"
+  if [ -n "$wfail" ]; then
+    echo "sync: 일부만 썼다 — 못 쓴 것:$wfail" >&2
+    echo "  .paddock/manifest.tsv·config.sh 는 그대로 뒀다. 원인(권한·디스크)을 고친 뒤 같은 명령을 다시 돌리면 이어진다" >&2
+    exit 1
+  fi
   [ -f "$stage/gitignore.fragment" ] && gitignore_append "$stage/gitignore.fragment" "$target"
   cp "$stage/.paddock/manifest.tsv" "$stage/.paddock/config.sh" "$target/.paddock/"
   echo "sync: 썼다 → $target"
@@ -339,5 +377,5 @@ case "${1:-}" in
   apply) shift; cmd_apply "$@" ;;
   sync) shift; cmd_sync "$@" ;;
   version) plugin_version ;;
-  *) sed -n '3,23p' "$0" | sed 's/^# \{0,1\}//'; exit 2 ;;
+  *) sed -n '3,25p' "$0" | sed 's/^# \{0,1\}//'; exit 2 ;;
 esac

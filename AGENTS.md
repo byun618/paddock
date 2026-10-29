@@ -27,6 +27,8 @@ paddock 은 AI 작업 흐름(규칙·역할·스킬·게이트·harness 매핑·
 
 - 자산의 표기(`{{VAR}}`·`paddock:fixed`·`seed`·`design`·`module`)를 쓰거나 바꾸면 `assets/README.md` 를 같은 커밋에서 고친다
 - 대상 레포의 다른 파일이 이름·번호로 가리키는 것(절 제목·절 번호·변수 이름·마커 형식)을 바꾸는 것은 깨는 변경이다
+- 한 파일 안에서 같은 ID 슬롯의 개수·순서를 바꾸는 것도 깨는 변경이다 — sync 는 슬롯을 ID + 같은 ID 안 순번으로 짝짓는다. 바꾸면 CHANGELOG `### 재감사` 에 적는다
+- 대상 레포에서 판단이 필요한 변경(새 슬롯·새 변수·바뀐 원칙·바뀐 seed·이름 바뀜)은 CHANGELOG 의 그 버전 `### 재감사` 에 적는다 — sync 스킬이 이것을 읽는다
 - 자산은 특정 프로젝트의 사례·일감 번호·경로를 담지 않는다 — 규칙 문장만 남긴다
 
 ## 버전
@@ -39,5 +41,5 @@ paddock 은 AI 작업 흐름(규칙·역할·스킬·게이트·harness 매핑·
 ## 작업 흐름
 
 - v0(adopt 동작) 전까지는 `main` 에 직접 커밋한다. v0 뒤 paddock 에 adopt 를 스스로 적용하고 PR 흐름으로 바꾼다
-- 검증: `claude plugin validate . --strict` · `scripts/check.sh` · `scripts/render-test.sh` · `scripts/sync-test.sh` 가 통과해야 커밋한다. task 스크립트를 고치면 `scripts/l1-tests/task-finish-test.sh` 도
+- 검증: `claude plugin validate . --strict` · `scripts/check.sh` · `scripts/render-test.sh` · `scripts/sync-test.sh` · `scripts/upgrade-test.sh`(지난 태그가 있는 클론) 가 통과해야 커밋한다. task 스크립트를 고치면 `scripts/l1-tests/task-finish-test.sh` 도
 - 시크릿 점검: gitleaks pre-commit 훅(`.githooks/`). 클론마다 한 번 `git config core.hooksPath .githooks`

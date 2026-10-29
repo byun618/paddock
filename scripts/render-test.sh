@@ -143,5 +143,14 @@ cfg "$T/skip.sh" ""; printf 'PADDOCK_SKIP=".claude/agents .agents/agents"\n' >> 
 "$R" render --config "$T/skip.sh" --out "$T/skip" >/dev/null; rc=$?
 check "링크·폴더 둘 다 안 깔고 manifest 에도 없음, 다른 링크는 그대로" '[ $rc = 0 ] && [ ! -e "$T/skip/.claude/agents" ] && [ ! -L "$T/skip/.claude/agents" ] && [ ! -e "$T/skip/.agents/agents" ] && ! grep -qE "^\.(claude|agents)/agents	" "$T/skip/.paddock/manifest.tsv" && [ -L "$T/skip/.claude/rules" ]'
 
+cfg "$T/skip2.sh" ""; printf 'PADDOCK_SKIP="./.claude/agents/"\n' >> "$T/skip2.sh"
+"$R" render --config "$T/skip2.sh" --out "$T/skip2" >/dev/null; rc=$?
+check "앞 ./ 와 끝 / 는 떼고 같은 경로로 본다" '[ $rc = 0 ] && [ ! -L "$T/skip2/.claude/agents" ] && [ -L "$T/skip2/.claude/rules" ]'
+for bad in "../x" "/abs" ".claude/*" "a/../b"; do
+  cfg "$T/skip3.sh" ""; printf 'PADDOCK_SKIP="%s"\n' "$bad" >> "$T/skip3.sh"; rm -rf "$T/skip3"
+  "$R" render --config "$T/skip3.sh" --out "$T/skip3" > "$T/err" 2>&1; rc=$?
+  check "PADDOCK_SKIP=\"$bad\" → 거절 exit 2" '[ $rc = 2 ] && grep -q "쓸 수 없는 경로" "$T/err"'
+done
+
 echo "통과 $pass · 실패 $fail"
 [ "$fail" = 0 ]

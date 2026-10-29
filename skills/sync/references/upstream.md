@@ -32,6 +32,13 @@ sync 6단계(또는 사용자가 「paddock 에 올릴 것 있나」라고 할 �
 paddock 레포는 공개될 수 있다. 초안에서 지운다: 일감 번호·레포 이름·사람 이름·홈 경로·내부 경로·서비스 이름·세션 id·원자료 인용.
 지운 뒤에도 뜻이 남는지 본다 — 안 남으면 그 후보는 일반적이지 않은 것이다.
 
+만들기 전에 기계로 한 번 더 본다 — 결과가 0줄이어야 한다:
+
+```sh
+. "<대상>/.paddock/config.sh"
+grep -nE "$PROJECT_NAME|${ISSUE_PREFIX:-^$}-[0-9]|$HOME|$(basename "$(git -C "<대상>" rev-parse --show-toplevel)")" <초안>
+```
+
 ## 만들기 (승인 뒤)
 
 paddock 레포 = 플러그인 `.claude-plugin/plugin.json` 의 `repository`.

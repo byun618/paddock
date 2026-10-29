@@ -40,17 +40,19 @@ description: paddock 을 이미 깐 레포를 설치된 paddock 새 버전에 �
 3. `OLD` = 대상 config 의 `PADDOCK_VERSION`, `NEW` = `paddock-render version`.
    같으면 「이미 최신」(drift 는 `paddock-check` 로 본다)으로 멈춘다. `NEW` 가 더 낮으면 플러그인 갱신을 안내하고 멈춘다
 4. CHANGELOG 에서 `OLD` 초과 ~ `NEW` 이하 절을 읽는다. `### 재감사` 항목을 목록으로 뽑는다
-5. `STAGE=$(mktemp -d "${TMPDIR:-/tmp}/paddock-sync.XXXXXX")`
+5. `STAGE=$(mktemp -d "${TMPDIR:-/tmp}/paddock-sync.XXXXXX")`, `cp "<대상>/.paddock/config.sh" "$STAGE/config.sh"` —
+   **렌더 입력은 늘 `STAGE/config.sh` 한 곳이다.** 새 변수·`PADDOCK_SKIP` 은 여기서만 고친다. 4단계 sync 가 이것을 대상 config 로 덮는다
 
 ## 2. 계획
 
 ```sh
-paddock-render render --config "<대상>/.paddock/config.sh" --out "$STAGE/out"
+paddock-render render --config "$STAGE/config.sh" --out "$STAGE/out"
 paddock-render sync "$STAGE/out" "<대상>" --dry-run      # exit 3 = 충돌 있음, 0 = 없음
 ```
 
 - 렌더가 exit 4 「미정의 변수 {{X}}」면 새 버전이 변수를 더했다 — `assets/README.md` 「변수」 표의 뜻대로 대상에서 값을 찾고,
-  못 찾으면 묻는다. `STAGE/config.sh`(대상 config 사본)에 더해 그것으로 렌더한다. 4단계에서 대상 config 는 sync 가 덮는다
+  못 찾으면 묻는다. `STAGE/config.sh` 에 더하고 `STAGE/out` 을 지운 뒤 다시 렌더한다
+- 렌더가 「새 렌더가 대상보다 낮다」로 거절하면 플러그인이 대상보다 옛 버전이다 — 멈추고 알린다
 - 계획 줄: `갱신`·`만듦`·`지움`·`링크`·`폴더 만듦`·`폴더 지움` 은 도구가 한다. `새 슬롯`·`seed 바뀜`·`seed 남김`·`충돌` 은 3단계와 게이트의 몫
 
 ## 3. 재감사
@@ -74,13 +76,13 @@ git -C "<대상>" diff "$BASE" -- "<경로>"                              # 그 
 diff "<대상>/<경로>" "$STAGE/out/<경로>"                               # 새 버전과의 차이
 ```
 
-`BASE` 커밋이 없으면(적용 뒤 커밋 전) 둘째 줄은 「알 수 없음」. 사유별 선택지:
+`BASE` 커밋이 없으면(적용 뒤 커밋 전) 둘째 줄은 「알 수 없음」. 한 경로에 사유가 여럿이면 ` + ` 로 이어져 나온다 — 전부 보인다. 사유별 선택지:
 
 | 사유 | 선택지 |
 | --- | --- |
 | 고정부를 프로젝트가 고쳤다 · 빠지는 파일을 고쳤다 | ① 새 것으로(`--take-new`) — 그 수정이 일반적이면 되돌려 보내기 후보 ② 수정 내용을 슬롯·`.agents/rules/`·learnings 로 옮긴 뒤 새 것으로 ③ 이번 sync 보류 |
-| 고아 슬롯 | ① 내용을 새 버전의 다른 슬롯·rules 로 옮긴 뒤 `--take-new` ② 보류 |
-| 대상에서 지워졌다 | ① 되살림(`--take-new`) ② 깔지 않기로 — config `PADDOCK_SKIP` 에 더하고 다시 렌더 |
+| 고아 슬롯 | ① 내용을 새 버전의 다른 슬롯·rules 로 옮긴 뒤 `--take-new` ② 보류. 사유에 「고정부를 프로젝트가 고쳤다」도 붙어 있으면 그 수정도 같이 다룬다 — `--take-new` 는 둘 다 버린다 |
+| 대상에서 지워졌다 | ① 되살림(`--take-new`) ② 깔지 않기로 — `STAGE/config.sh` 의 `PADDOCK_SKIP` 에 더하고 다시 렌더 |
 | 심링크·폴더 자리에 실제 파일 | ① 그 파일을 옮긴 뒤 다시 ② `PADDOCK_SKIP` |
 | 내용이 다른 기존 파일 (새 파일 자리) | ① 기존 내용을 어디로 옮길지 정하고 `--take-new` ② `PADDOCK_SKIP` |
 
@@ -98,10 +100,13 @@ diff "<대상>/<경로>" "$STAGE/out/<경로>"                               # �
 
 ## 4. 쓰기
 
-1. 승인된 선택지 중 대상 파일을 옮기는 일(②·`PADDOCK_SKIP` 등)을 먼저 한다. config 를 바꿨으면 `STAGE/out` 을 지우고 다시 렌더
-2. `paddock-render sync "$STAGE/out" "<대상>" [--take-new <경로>]…` — 사용자가 「새 것으로」를 고른 경로만. exit 3 이면 멈추고 보고
-3. 새 슬롯을 채운다 — `<!-- paddock:design Dn -->` 과 닫는 줄 **사이만**, 안내 주석은 지운다
-4. 승인된 seed·재감사 반영을 한다
+1. 승인된 선택지 중 대상 파일을 옮기는 일(② 등)을 먼저 한다. `STAGE/config.sh` 를 바꿨으면(`PADDOCK_SKIP`·새 변수) `STAGE/out` 을 지우고 다시 렌더.
+   `PADDOCK_SKIP` 에 이미 깐 경로를 넣으면 sync 는 그것을 「지움」·「링크 지움」으로 계획한다 — 게이트에서 그 뜻을 말했어야 한다
+2. `sync --dry-run` 을 한 번 더 — 남은 충돌이 사용자가 「새 것으로」를 고른 경로뿐인지 본다. 다른 충돌이 나오면 멈추고, 1에서 바꾼 대상 파일을 함께 보고한다
+3. `paddock-render sync "$STAGE/out" "<대상>" [--take-new <경로>]…` — 사용자가 「새 것으로」를 고른 경로만.
+   exit 3 이면 멈추고 보고. exit 1(일부만 씀)이면 못 쓴 목록과 원인을 보고 — lock 은 그대로라 원인을 고친 뒤 같은 명령으로 이어진다
+4. 새 슬롯을 채운다 — `<!-- paddock:design Dn -->` 과 닫는 줄 **사이만**, 안내 주석은 지운다
+5. 승인된 seed·재감사 반영을 한다
 
 ## 5. 검증·기록
 
