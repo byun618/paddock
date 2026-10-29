@@ -3,6 +3,7 @@
 # 기준선: v1 렌더를 apply 하고 슬롯을 채운 대상. 시나리오마다 그 사본을 고친 뒤 v2(또는 바뀐 config)로 sync 한다.
 # 양성 대조: SY_MUTANT=<가드 이름> 이면 v2 bin 사본의 「# guard:<이름>」 줄을 망가뜨린다 — 그 가드의 케이스가 FAIL 해야 한다.
 #   가드 이름 전부는 `grep -o 'guard:s-[a-z-]*' bin/paddock-render`.
+# SY_KEEP=1 이면 임시 폴더를 남긴다(디버그).
 set -u
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 T=$(mktemp -d "${TMPDIR:-/tmp}/paddock-sync-test.XXXXXX")
@@ -75,7 +76,8 @@ mkdir -p "$T/base"; printf 'node_modules/\n' > "$T/base/.gitignore"; printf '프
 awk '/paddock:design D1 -->/{print; print "내 D1"; next} /paddock:design D2 -->/{print; n++; print "내 D2-" n; next} {print}' "$T/base/m.md" > "$T/m" && mv "$T/m" "$T/base/m.md"
 
 fresh() { rm -rf "$T/t"; cp -R "$T/base" "$T/t"; }
-sync2() { "$V2/bin/paddock-render" sync "$T/r2" "$T/t" "$@" > "$T/out" 2>&1; }
+mkdir -p "$T/tmp"
+sync2() { TMPDIR="$T/tmp" "$V2/bin/paddock-render" sync "$T/r2" "$T/t" "$@" > "$T/out" 2>&1; }
 
 echo "S0 렌더가 버전을 plugin.json 에서 쓴다"
 check "config 에 0.0.9 를 줘도 렌더본 PADDOCK_VERSION=1.0.0" S0 'grep -qx "PADDOCK_VERSION=1.0.0" "$T/r1/.paddock/config.sh" && [ "$(grep -c "^PADDOCK_VERSION=" "$T/r1/.paddock/config.sh")" = 1 ]'
@@ -141,6 +143,9 @@ fresh; "$V1/bin/paddock-render" sync "$T/r1x" "$T/t" > "$T/out" 2>&1; rc=$?
 check "extra 끔 → e.md 지움, 슬롯 보존, exit 0" S9 '[ $rc = 0 ] && [ ! -e "$T/t/e.md" ] && grep -qx "내 D2-2" "$T/t/m.md" && grep -q "PADDOCK_MODULES=\"\"" "$T/t/.paddock/config.sh"'
 "$V1/bin/paddock-check" "$T/t" > "$T/chk" 2>&1; rc=$?
 check "모듈 끈 뒤 paddock-check 통과" S9 '[ $rc = 0 ]'
+
+echo "S10 임시 폴더"
+check "성공·충돌·dry-run 어느 쪽이든 sync 임시 폴더가 남지 않는다" S10 '[ -z "$(ls -A "$T/tmp")" ]'
 
 echo "통과 $pass · 실패 $fail"
 [ "$fail" = 0 ] || echo "FAIL:$failed"

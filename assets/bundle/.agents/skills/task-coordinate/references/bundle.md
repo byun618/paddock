@@ -108,7 +108,7 @@ git fetch origin {{BASE_BRANCH}} && git merge origin/{{BASE_BRANCH}} && git push
 <!-- paddock:module l3 -->
    출고 회고(release §4)는 이 `verdict.md` 의 자식 판정 링크로 자식 폴더를 찾는다.
 <!-- /paddock:module -->
-3. **⛔ 출고 승인 게이트** — 보고하고 멈춘다(PR 생성 전). 승인이 오면 묶음 폴더를 커밋하고
+3. **⛔ PR 생성 승인 게이트** — 보고하고 멈춘다(PR 생성 전). 승인이 오면 묶음 폴더를 커밋하고
 <!-- paddock:module specs-repo -->
    push 한 뒤
 <!-- /paddock:module -->

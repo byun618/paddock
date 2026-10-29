@@ -65,7 +65,7 @@ is_throwaway() { local s; for s in $VARIANT_SUFFIXES; do if [ "$1" = "$TASK$s" ]
 has_local() { git -C "$REPO" rev-parse --verify -q "refs/heads/$1" >/dev/null; }
 has_remote() { [ -n "$(git -C "$REPO" ls-remote --heads origin "refs/heads/$1")" ]; }
 
-# 묶음(<묶음 브랜치>) — 출고 승인(PR 생성) 직후 묶음 코디의 마지막 실행, PR 머지 뒤엔 본체의 안전망.
+# 묶음(<묶음 브랜치>) — PR 생성 승인 직후 묶음 코디의 마지막 실행, PR 머지 뒤엔 본체의 안전망.
 # PR(head = 묶음 브랜치) 확인 → 로컬 묶음 브랜치가 보존 위치에 다 있음 → 묶음 worktree 깨끗 → 남은 자식 0 → 묶음 worktree·로컬 묶음 브랜치 정리.
 # 원격 묶음 브랜치는 PR 이 열려 있는 동안 남긴다(PR head). 검사를 다 통과한 뒤에만 지우고, 지우는 단계가 실패하면 성공을 보고하지 않는다.
 # 지우기는 검사한 값에 묶는다 — 로컬 묶음 브랜치는 update-ref 구 값 비교, 원격 묶음 브랜치는 --force-with-lease(검사 뒤 움직였으면 멈춘다).

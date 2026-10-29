@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # paddock:fixed
 # task-pr.sh <브랜치> [--base <base>] [--pr <산출물 루트 상대경로>] [--verdict <산출물 루트 상대경로>] [--draft]
-# 게이트 ② 출고 승인 = PR 생성. 머지는 하지 않는다.
+# 게이트 ② PR 생성 승인 뒤 PR 을 연다. 머지는 하지 않는다.
 #   <브랜치>  작업 브랜치 (<ID 접두>-NNN-<슬러그>, ID 접두가 없는 프로젝트는 <슬러그>) 또는 (bundle 모듈) 묶음 브랜치 (<묶음 접두>…)
 #   --base    PR 대상. 기본 BASE_BRANCH. 리허설은 throwaway base 를 준다
 #   --pr      PR 원고 (산출물 루트 상대경로). 기본 <브랜치에서 묶음 접두를 뗀 이름>/pr.md — 코디네이터가 쓰고 커밋한다.

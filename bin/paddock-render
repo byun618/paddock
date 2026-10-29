@@ -240,7 +240,8 @@ cmd_sync() {
   done
   [ -f "$stage/.paddock/manifest.tsv" ] || die "sync: 렌더 폴더가 아니다(.paddock/manifest.tsv 없음): $stage"
   [ -f "$target/.paddock/manifest.tsv" ] || die "sync: 대상에 .paddock/manifest.tsv 가 없다 — 처음 들이는 것은 apply"
-  local W; W=$(mktemp -d "${TMPDIR:-/tmp}/paddock-sync.XXXXXX") || die "sync: 임시 폴더를 만들지 못했다"
+  # 전역 — EXIT trap 은 함수가 끝난 뒤에 돈다
+  W=$(mktemp -d "${TMPDIR:-/tmp}/paddock-sync.XXXXXX") || die "sync: 임시 폴더를 만들지 못했다"
   trap 'rm -rf "$W"' EXIT
   : > "$W/plan"
 

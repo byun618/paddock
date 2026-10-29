@@ -67,12 +67,12 @@
 <!-- paddock:module l1 -->
 - 판정 규칙(다수결 기각 금지·수렴 조건·수정 상한·테스트 계층·경량/전체 경로)은 task-coordinate §2·§3·§5·§6
 - **사용자 승인 게이트 3단 (자율 진행 금지 지점)**: ⓪ 킥오프(구현 워커 기동 전) ① 채택(작업 브랜치 머지 전)
-  ② 출고(PR 생성 전). 게이트 사이는 자율 진행하되 게이트에서 멈추고 보고한다 — 보고할 내용은 task-coordinate 의 각 게이트 절.
-  worktree 는 출고 승인 전까지 유지 — 사용자가 직접 실행·확인할 수 있는 상태
+  ② PR 생성(PR 을 열기 전). 게이트 사이는 자율 진행하되 게이트에서 멈추고 보고한다 — 보고할 내용은 task-coordinate 의 각 게이트 절.
+  worktree 는 PR 생성 승인 전까지 유지 — 사용자가 직접 실행·확인할 수 있는 상태
 <!-- /paddock:module -->
 <!-- paddock:module bundle -->
-  묶음 코디의 게이트(분해 승인 ⓪·출고 승인)는 task-coordinate references/bundle.md 2·6.
-  묶음 브랜치의 worktree 도 같다 — 묶음 코디가 출고 승인(PR 생성) 직후 정리한다(task-coordinate references/bundle.md 6)
+  묶음 코디의 게이트(분해 승인 ⓪·PR 생성 승인)는 task-coordinate references/bundle.md 2·6.
+  묶음 브랜치의 worktree 도 같다 — 묶음 코디가 PR 생성 승인 직후 정리한다(task-coordinate references/bundle.md 6)
 <!-- /paddock:module -->
 <!-- paddock:module l1 -->
 - 작업이 끝나거나 막히면 반드시 사용자에게 보고 — 조용한 완료 금지
