@@ -103,18 +103,39 @@ config 에만 있는 키 — 자산 문서에는 안 나오고 스크립트가 �
 | --- | --- |
 | `paddock-render render --config <config.sh> --out <빈 폴더>` | 켠 층·모듈·변수로 대상 레포 모양의 트리를 만든다. `.paddock/config.sh` 사본과 `.paddock/manifest.tsv`(경로 · 종류 · 해시)를 같이 둔다 |
 | `paddock-render apply <렌더 폴더> <대상> [--dry-run]` | 대상에 들인다. 내용이 다른 기존 파일이 하나라도 있으면 아무것도 쓰지 않고 충돌 목록을 낸다(exit 3) |
-| `paddock-check [<대상>] [--require-filled]` | manifest 항목·남은 변수·슬롯 짝(과 채움)·고정 부분 drift·Codex 포인터·capability-check |
+| `paddock-render sync <렌더 폴더> <대상> [--dry-run] [--take-new <경로>]…` | 이미 들인 대상을 새 렌더(새 버전·바뀐 config)로 맞춘다 — 아래 「sync」 |
+| `paddock-render version` | 플러그인 버전 (`.claude-plugin/plugin.json`) |
+| `paddock-check [<대상>] [--require-filled]` | manifest 항목·남은 변수·슬롯 짝(과 채움)·고정 부분 drift·Codex 포인터·capability-check. 플러그인 버전과 다르면 알린다 |
 
 대상의 `.paddock/config.sh` (bash 로 읽는다 — task 스크립트도 이것을 읽는다):
 
 ```sh
-PADDOCK_VERSION=0.2.0
+PADDOCK_VERSION=0.2.0          # render 가 플러그인 버전으로 쓴다 — 손으로 고치지 않는다
 PADDOCK_MODULES="l1 l2"        # 켠 모듈. l0 은 늘 켜짐. 층 폴더 l1·l2 도 이 이름으로 켠다
 PADDOCK_HARNESS=corral         # l2 를 켰을 때 쓰는 도구 하나 (bare · corral)
 PROJECT_NAME=…                 # 아래 「변수」 표의 값들
 ```
 
 manifest 종류: `fixed` · `seed` · `managed`(설계 슬롯이 있는 파일 — 해시는 슬롯 안을 비우고 잰다) · `link` · `dir`.
+`config.sh` 의 `PADDOCK_VERSION` 과 manifest 가 대상의 lock 이다 — 어느 버전의 무엇을 깔았는지, 고정부가 그때 어땠는지(해시).
+
+### sync
+
+대상 manifest 의 해시가 「지난 렌더」다. 고정부 내용은 따로 저장하지 않는다 — 프로젝트는 고정부를 고치지 않는다는 계약이라 「고쳤나」만 알면 된다.
+
+| 지난 manifest | 새 렌더 | 대상 지금 | 처리 |
+| --- | --- | --- | --- |
+| 있음 | 있음 | 고정부 해시 = 지난 해시 | 갱신. 설계 슬롯 내용은 **ID + 같은 ID 안 순번**으로 옮겨 담는다. 새 슬롯은 빈 채로 「새 슬롯」 보고 |
+| 있음 | 있음 | 다름 | 충돌 — 프로젝트가 고정부를 고쳤다 |
+| 있음 | 있음 | 없음 | 충돌 — 대상에서 지워졌다 |
+| 없음 | 있음 | 없음 / 같음 / 다름 | 만듦 / 그대로 / 충돌 |
+| 있음 | 없음 | 고정부 해시 = 지난 해시 / 다름 | 지움(빈 폴더도) / 충돌 |
+| seed | | | 쓰지 않는다. 대상에 없으면 만들고, 새 seed 가 지난 것과 다르면 「seed 바뀜」 보고만 |
+| 슬롯 | 새 렌더에 그 ID·순번이 없음 | 내용이 있음(주석 빼고) | 충돌 — 고아 슬롯 |
+
+- 충돌이 하나라도 있으면 아무것도 쓰지 않는다(exit 3). `--take-new <경로>` 는 그 경로의 충돌만 새 것으로 푼다(슬롯은 옮김, 고아 슬롯 내용은 버림).
+- 모듈·harness 를 바꾸는 것도 sync 다 — 바꾼 config 로 렌더해 같은 표로 맞춘다.
+- `.gitignore` 는 새 조각 줄만 덧붙인다. 지난 버전에만 있던 줄은 지우지 않는다.
 
 ## 복사 규칙
 

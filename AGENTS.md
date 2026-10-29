@@ -15,12 +15,13 @@ paddock 은 AI 작업 흐름(규칙·역할·스킬·게이트·harness 매핑·
 
 - `.claude-plugin/` — `plugin.json`(버전 원본) · `marketplace.json`(이 레포 자체가 마켓플레이스, `paddock@paddock`)
 - `skills/` — 플러그인 스킬: `adopt` (예정: sync)
-- `bin/` — 결정적 도구 `paddock-render`(render·apply) · `paddock-check`. 플러그인 bin 이라 세션 PATH 에 들어간다
+- `bin/` — 결정적 도구 `paddock-render`(render·apply·sync) · `paddock-check`. 플러그인 bin 이라 세션 PATH 에 들어간다
 - `evals/` — `claude plugin eval` 트리거 케이스 (결과 `evals/results/` 는 커밋하지 않음)
 - `assets/l<층>/` — 대상 레포 루트를 비추는 자산 트리. **층·표기 규약·변수·복사 규칙의 원본은 `assets/README.md` 한 곳**
 - `templates/` — 역할마다 찍어내는 틀
 - `scripts/check.sh` — 자산 계약·공개 안전 검사. 자산을 고친 커밋 전에 돌린다
-- `scripts/render-test.sh` · `scripts/l1-tests/` — 렌더 도구·task 스크립트 시험 (`TF_MUTANT=<가드>` 로 변이 대조)
+- `scripts/render-test.sh` · `scripts/sync-test.sh` · `scripts/l1-tests/` — 렌더·sync 도구, task 스크립트 시험
+  (`SY_MUTANT=<가드>` · `TF_MUTANT=<가드>` 로 변이 대조)
 
 ## 자산 수정
 
@@ -38,5 +39,5 @@ paddock 은 AI 작업 흐름(규칙·역할·스킬·게이트·harness 매핑·
 ## 작업 흐름
 
 - v0(adopt 동작) 전까지는 `main` 에 직접 커밋한다. v0 뒤 paddock 에 adopt 를 스스로 적용하고 PR 흐름으로 바꾼다
-- 검증: `claude plugin validate . --strict` · `scripts/check.sh` · `scripts/render-test.sh` 가 통과해야 커밋한다. task 스크립트를 고치면 `scripts/l1-tests/task-finish-test.sh` 도
+- 검증: `claude plugin validate . --strict` · `scripts/check.sh` · `scripts/render-test.sh` · `scripts/sync-test.sh` 가 통과해야 커밋한다. task 스크립트를 고치면 `scripts/l1-tests/task-finish-test.sh` 도
 - 시크릿 점검: gitleaks pre-commit 훅(`.githooks/`). 클론마다 한 번 `git config core.hooksPath .githooks`

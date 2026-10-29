@@ -38,7 +38,7 @@ check "manifest 에 seed·link·dir 종류" 'grep -q "^.agents/rules/writing.md	
 echo "R3 모듈 — 끄면 구간째 빠지고 마커도 남지 않는다"
 check "모듈 마커가 출력에 없다" '! grep -rq "paddock:module" "$T/a"'
 check "설계 슬롯 마커는 남는다" 'grep -q "<!-- paddock:design D1 -->" "$T/a/AGENTS.md"'
-mkdir -p "$T/fx/assets/l0"; cp -R "$ROOT/bin" "$T/fx/"
+mkdir -p "$T/fx/assets/l0"; cp -R "$ROOT/bin" "$ROOT/.claude-plugin" "$T/fx/"
 printf 'a\n<!-- paddock:module l1 -->\nL1줄\n<!-- /paddock:module -->\n<!-- paddock:module bundle -->\nB줄\n<!-- /paddock:module -->\nz\n' > "$T/fx/assets/l0/m.md"
 printf '# x\n' > "$T/fx/assets/README.md"
 cfg "$T/c1.sh" "l1"
