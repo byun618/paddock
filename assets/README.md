@@ -113,6 +113,7 @@ config 에만 있는 키 — 자산 문서에는 안 나오고 스크립트가 �
 PADDOCK_VERSION=0.2.0          # render 가 플러그인 버전으로 쓴다 — 손으로 고치지 않는다
 PADDOCK_MODULES="l1 l2"        # 켠 모듈. l0 은 늘 켜짐. 층 폴더 l1·l2 도 이 이름으로 켠다
 PADDOCK_HARNESS=corral         # l2 를 켰을 때 쓰는 도구 하나 (bare · corral)
+PADDOCK_SKIP=".claude/agents"  # 깔지 않을 경로(공백으로 나눔, 그 아래 전부). 기존 것과 뜻이 달라 두기로 한 자리 — sync 도 따른다
 PROJECT_NAME=…                 # 아래 「변수」 표의 값들
 ```
 

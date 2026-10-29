@@ -18,7 +18,7 @@
 #   paddock-render version
 #       이 플러그인의 버전 (.claude-plugin/plugin.json)
 #
-# config.sh: PADDOCK_MODULES("l1 l2 bundle" 처럼 켠 모듈) · PADDOCK_HARNESS(bare|corral) · 자산 변수들.
+# config.sh: PADDOCK_MODULES("l1 l2 bundle" 처럼 켠 모듈) · PADDOCK_HARNESS(bare|corral) · PADDOCK_SKIP(깔지 않을 경로) · 자산 변수들.
 #   PADDOCK_VERSION 은 render 가 플러그인 버전으로 쓴다 — config 의 값은 지난 렌더의 버전일 뿐이다.
 # 종료코드: 0 성공 · 2 사용법/입력 오류 · 3 apply·sync 충돌 · 4 렌더 실패(미정의 변수·마커 오류)
 set -u
@@ -29,6 +29,8 @@ TAB=$(printf '\t')
 die() { echo "paddock-render: $1" >&2; exit "${2:-2}"; }
 sha() { if command -v shasum >/dev/null 2>&1; then shasum -a 256 | cut -c1-64; else sha256sum | cut -c1-64; fi; }
 has_word() { case " $1 " in *" $2 "*) return 0 ;; esac; return 1; }
+# PADDOCK_SKIP(공백으로 나눈 경로들) 이거나 그 아래면 렌더하지 않는다 — 프로젝트가 깔지 않기로 한 항목. sync 도 같은 config 로 렌더해 이 결정이 이어진다
+skipped() { local p; for p in ${PADDOCK_SKIP:-}; do case "$1" in "$p"|"$p"/*) return 0 ;; esac; done; return 1; }
 plugin_version() { sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$PLUGIN_ROOT/.claude-plugin/plugin.json" 2>/dev/null | head -n 1; }
 
 # 파일 종류: 첫 두 줄의 paddock:fixed / paddock:seed, 아니면 design 마커가 있으면 managed, 아니면 fixed
@@ -87,7 +89,7 @@ cmd_render() {
   # config 를 읽고, 자산이 쓰는 변수를 PADDOCK_V_<이름> 으로 내보낸다 (config 에 있는 것만 — 없으면 렌더 실패)
   # shellcheck disable=SC1090
   . "$config" || die "render: config 를 읽지 못했다: $config"
-  : "${PADDOCK_MODULES=}" "${PADDOCK_HARNESS=}"
+  : "${PADDOCK_MODULES=}" "${PADDOCK_HARNESS=}" "${PADDOCK_SKIP=}"
   PADDOCK_VERSION=$(plugin_version)
   [ -n "$PADDOCK_VERSION" ] || die "render: 플러그인 버전을 읽지 못했다: $PLUGIN_ROOT/.claude-plugin/plugin.json"
   # 파생 변수 — config 에 두지 않는다. ISSUE_PREFIX 로 정해진다(빈 값 = ID 없음 모드: 작업 이름 = 슬러그)
@@ -125,6 +127,7 @@ cmd_render() {
   for layer in $layers; do
     [ -d "$ASSETS/$layer" ] || continue
     while IFS= read -r rel; do
+      skipped "$rel" && continue
       src="$ASSETS/$layer/$rel"; dst="$out/$rel"
       if [ -L "$src" ]; then
         mkdir -p "$(dirname "$dst")"; ln -s "$(readlink "$src")" "$dst"
@@ -314,6 +317,8 @@ cmd_sync() {
       "폴더 지움") (cd "$target" && rmdir -p "$rel" 2>/dev/null) ;;
     esac
   done < "$W/plan"
+  # 지우며 비운 폴더 정리가 새 manifest 의 빈 폴더까지 지웠을 수 있다 — 다시 세운다
+  awk -F'\t' '!/^#/ && $2 == "dir" {print $1}' "$stage/.paddock/manifest.tsv" | while IFS= read -r rel; do mkdir -p "$target/$rel"; done # guard:s-dirs
   while IFS="$TAB" read -r act rel why; do
     path="$target/$rel"
     case "$act" in

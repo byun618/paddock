@@ -44,14 +44,16 @@
 | 범위가 다름 | `.agents/skills/` 로 옮기기만 한다(`.claude/skills` 가 심링크가 되므로) |
 
 `.claude/{rules,skills,agents}` 가 실제 폴더면 내용을 `.agents/` 같은 이름 아래로 `git mv` 하고 남은 빈 폴더를 지우는 것(`rmdir`)이 기본이다 — 그래야 심링크를 깔 수 있다.
-에이전트 파일(`.claude/agents/*.md`)은 서브에이전트 정의일 수 있다 — paddock 의 `.agents/agents/` 는 「세션이 읽는 역할 지침서」라 뜻이 다르다. 서브에이전트 정의는 그대로 두고 `.claude/agents` 심링크를 깔지 않는다 — 3단계에서 `STAGE/out/.paddock/manifest.tsv` 의 `.claude/agents` 행을 지우고(apply·paddock-check 가 그 manifest 를 따른다) 설계에 적는다.
+에이전트 파일(`.claude/agents/*.md`)은 서브에이전트 정의일 수 있다 — paddock 의 `.agents/agents/` 는 「세션이 읽는 역할 지침서」라 뜻이 다르다. 서브에이전트 정의는 그대로 두고 `.claude/agents` 심링크를 깔지 않는다 — config 의 `PADDOCK_SKIP` 에 `.claude/agents` 를 넣고(render·sync·paddock-check 가 따른다) 설계에 적는다.
 
 ## 재적용
 
 | 바꾸려는 것 | 0 | 1 | 2 | 승인 | 3 | 4 |
 | --- | --- | --- | --- | --- | --- | --- |
 | 슬롯 내용·defaults 만 | 현재 `.paddock/design.md` 읽기 | 필요한 항목만 | 해당 항목 | 필수 | 슬롯만 고침(렌더·apply 없음) | 필수 |
-| 모듈·harness 켜고 끄기 | — | — | — | — | v0 미구현 — 채운 슬롯을 지키며 managed 파일의 module 구간만 바꾸는 도구가 없다(다시 렌더해 apply 하면 슬롯을 채운 파일이 충돌). 「미구현 — sync 예정」으로 보고하고 멈춘다 | — |
-| paddock 버전 갱신(고정 자산) | — | — | — | — | sync(예정)의 일 — 지금은 「sync 미구현」 으로 보고하고 멈춘다 | — |
+| 모듈·harness 켜고 끄기 | 현재 `design.md`·config 읽기 | 새로 켠 층에 필요한 항목 | 바꾼 config, 새로 생길 슬롯 초안 | 필수 — `sync --dry-run` 계획(만듦·지움·충돌·새 슬롯) 포함 | 바꾼 config 로 렌더 → `paddock-render sync "$STAGE/out" <대상>` → 새 슬롯 채움 | 필수 |
+| paddock 버전 갱신(고정 자산) | — | — | — | — | `sync` 스킬로 넘긴다 | — |
 
-재적용 때 슬롯 내용은 대상의 현재 파일이 원본이다 — 렌더본의 빈 슬롯으로 덮지 않는다.
+재적용 때 슬롯 내용은 대상의 현재 파일이 원본이다 — 렌더본의 빈 슬롯으로 덮지 않는다(sync 가 ID·순번으로 옮겨 담는다).
+모듈을 끄면 그 층의 파일이 지워진다. 그 파일의 슬롯에 내용이 있으면 sync 가 「고아 슬롯」 충돌로 멈춘다 — 내용을 어디로 옮길지 승인 게이트에서 정한다.
+sync 충돌을 푸는 법은 `sync` 스킬의 「충돌」 절과 같다.

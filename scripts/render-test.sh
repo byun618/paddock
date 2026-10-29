@@ -138,5 +138,10 @@ check "paddock-check → 통과(capability-check names·shape 포함)" '[ $rc = 
 "$C" "$T/cor-r" --require-filled > "$T/out" 2>&1; rc=$?
 check "--require-filled, defaults.md 역할 표 비었음 → 실패" '[ $rc = 1 ] && grep -q "defaults.md 역할 표에 빈 행" "$T/out"'
 
+echo "R10 PADDOCK_SKIP — 깔지 않기로 한 경로"
+cfg "$T/skip.sh" ""; printf 'PADDOCK_SKIP=".claude/agents .agents/agents"\n' >> "$T/skip.sh"
+"$R" render --config "$T/skip.sh" --out "$T/skip" >/dev/null; rc=$?
+check "링크·폴더 둘 다 안 깔고 manifest 에도 없음, 다른 링크는 그대로" '[ $rc = 0 ] && [ ! -e "$T/skip/.claude/agents" ] && [ ! -L "$T/skip/.claude/agents" ] && [ ! -e "$T/skip/.agents/agents" ] && ! grep -qE "^\.(claude|agents)/agents	" "$T/skip/.paddock/manifest.tsv" && [ -L "$T/skip/.claude/rules" ]'
+
 echo "통과 $pass · 실패 $fail"
 [ "$fail" = 0 ]

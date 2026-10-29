@@ -32,7 +32,7 @@ printf '<!-- paddock:fixed -->\n사라질 파일\n' > "$A/gone.md"
 { printf 'g\n'; slot D8 여덟; } > "$A/gonem.md"
 printf '<!-- paddock:seed -->\nseed v1\n' > "$A/s.md"
 ln -s same.md "$A/lk"
-mkdir -p "$A/d" "$A/old"; : > "$A/d/.gitkeep"; : > "$A/old/.gitkeep"
+mkdir -p "$A/d" "$A/old"; : > "$A/d/.gitkeep"; : > "$A/old/.gitkeep"; printf '<!-- paddock:fixed -->\n빈 폴더 안의 지난 파일\n' > "$A/d/was.md"
 printf 'a/\n' > "$A/gitignore.fragment"
 printf '<!-- paddock:fixed -->\n모듈 파일\n' > "$V1/assets/extra/e.md"
 # v2 자산: a 바뀜 · same 같음 · m 고정부 바뀜+D3 새 슬롯 · o 의 D9 없어짐 · gone·gonem·old/ 빠짐 · seed 바뀜 · 새 실행 파일·링크·.gitignore 줄
@@ -59,6 +59,7 @@ if [ -n "${SY_MUTANT:-}" ]; then
     s-orphan-del) sed -i '' '/# guard:s-orphan-del$/ s/if \[ -s "\$W\/orph" \]; then/if false; then/' "$f" ;;
     s-touched-del) sed -i '' '/# guard:s-touched-del$/ s/else conflict "\$rel" 지움 "새 구성에서 빠지는 파일을 프로젝트가 고쳤다"/else plan 지움 "$rel" x/' "$f" ;;
     s-atomic) sed -i '' '/# guard:s-atomic$/ s/if \[ "\$n_conf" != 0 \]; then/if false; then/' "$f" ;;
+    s-dirs) sed -i '' '/# guard:s-dirs$/ s/mkdir -p "\$target\/\$rel"/true/' "$f" ;;
     s-link) sed -i '' '/# guard:s-link$/ s/plan 충돌 "\$rel" "심링크 자리에/plan 링크 "$rel" "/' "$f" ;;
     *) echo "모르는 SY_MUTANT: $SY_MUTANT" >&2; exit 2 ;;
   esac
@@ -91,6 +92,7 @@ check "고정 파일 갱신" S1 'grep -qx "A v2" "$T/t/a.md"'
 check "같은 ID 슬롯 둘을 순서대로 보존 + 고정부 갱신" S1 '[ "$(grep -E "^내 |^z " "$T/t/m.md" | tr "\n" " ")" = "내 D1 내 D2-1 내 D2-2 z v2 " ]'
 check "새 슬롯 D3 은 힌트째 비어 있고 계획에 보고" S1 'grep -q "<!-- 셋 힌트 -->" "$T/t/m.md" && grep -q "새 슬롯	m.md	D3#1" "$T/out"'
 check "빠진 파일·빈 폴더 지움" S1 '[ ! -e "$T/t/gone.md" ] && [ ! -e "$T/t/gonem.md" ] && [ ! -e "$T/t/old" ]'
+check "빠진 파일을 지워 비게 된 폴더라도 새 manifest 의 폴더(d)는 남는다" S1 '[ ! -e "$T/t/d/was.md" ] && [ -d "$T/t/d" ]'
 check "슬롯이 비었던 o.md 는 D9 없이 갱신" S1 '[ "$(cat "$T/t/o.md" | tr "\n" " ")" = "o o v2 " ]'
 check "seed 는 그대로, 「seed 바뀜」 보고" S1 'grep -qx "seed v1" "$T/t/s.md" && grep -q "seed 바뀜	s.md" "$T/out"'
 check "새 실행 파일·새 링크·.gitignore 새 줄" S1 '[ -x "$T/t/new.sh" ] && [ "$(readlink "$T/t/lk2")" = a.md ] && grep -qx "b/" "$T/t/.gitignore" && grep -qx "node_modules/" "$T/t/.gitignore"'
@@ -143,6 +145,14 @@ fresh; "$V1/bin/paddock-render" sync "$T/r1x" "$T/t" > "$T/out" 2>&1; rc=$?
 check "extra 끔 → e.md 지움, 슬롯 보존, exit 0" S9 '[ $rc = 0 ] && [ ! -e "$T/t/e.md" ] && grep -qx "내 D2-2" "$T/t/m.md" && grep -q "PADDOCK_MODULES=\"\"" "$T/t/.paddock/config.sh"'
 "$V1/bin/paddock-check" "$T/t" > "$T/chk" 2>&1; rc=$?
 check "모듈 끈 뒤 paddock-check 통과" S9 '[ $rc = 0 ]'
+
+echo "S11 PADDOCK_SKIP 이 sync 에도 이어진다"
+fresh; rm "$T/t/lk"; mkdir "$T/t/lk"; printf '서브에이전트\n' > "$T/t/lk/x.md"
+conflict_case S11 "skip 없이 링크 자리에 폴더" "충돌	lk	심링크 자리에 실제 파일"
+printf 'PADDOCK_SKIP="lk"\n' >> "$T/t/.paddock/config.sh"
+"$V2/bin/paddock-render" render --config "$T/t/.paddock/config.sh" --out "$T/r2s" >/dev/null
+TMPDIR="$T/tmp" "$V2/bin/paddock-render" sync "$T/r2s" "$T/t" > "$T/out" 2>&1; rc=$?
+check "config 에 PADDOCK_SKIP=lk → 충돌 없음, 폴더 그대로, 지움 대상도 아님" S11 '[ $rc = 0 ] && grep -qx "서브에이전트" "$T/t/lk/x.md" && ! grep -q "	lk	" "$T/out" && grep -q "PADDOCK_SKIP=\"lk\"" "$T/t/.paddock/config.sh"'
 
 echo "S10 임시 폴더"
 check "성공·충돌·dry-run 어느 쪽이든 sync 임시 폴더가 남지 않는다" S10 '[ -z "$(ls -A "$T/tmp")" ]'

@@ -1,6 +1,6 @@
 ---
 name: adopt
-description: 레포(신규·기존)에 paddock AI 작업 흐름 — AGENTS.md 지도, .agents 규칙·역할·스킬, 사용자 승인 게이트가 있는 task 흐름(분석→구현→독립 리뷰→판정→PR), harness 매핑 — 을 그 프로젝트에 맞게 설계해 깐다. 코드베이스와 기존 CLAUDE.md·AGENTS.md·규칙·스킬을 감사하고, 네이티브 실행·테스트 계층·리뷰 관점·경로 기준·harness 도구를 설계해 승인받은 뒤 생성·검증한다. 「paddock 적용」「adopt」「이 레포에 작업 흐름 깔아줘」「corral 흐름을 이 프로젝트에도」「AGENTS.md 체계 세팅」에 쓴다. 이미 깐 레포의 설계 변경에도 쓴다. CLAUDE.md·AGENTS.md 한 파일만 쓰거나 고치는 일, 에이전트 팀 구성, 코드 리뷰 요청에는 쓰지 않는다.
+description: 레포(신규·기존)에 paddock AI 작업 흐름 — AGENTS.md 지도, .agents 규칙·역할·스킬, 사용자 승인 게이트가 있는 task 흐름(분석→구현→독립 리뷰→판정→PR), harness 매핑 — 을 그 프로젝트에 맞게 설계해 깐다. 코드베이스와 기존 CLAUDE.md·AGENTS.md·규칙·스킬을 감사하고, 네이티브 실행·테스트 계층·리뷰 관점·경로 기준·harness 도구를 설계해 승인받은 뒤 생성·검증한다. 「paddock 적용」「adopt」「이 레포에 작업 흐름 깔아줘」「corral 흐름을 이 프로젝트에도」「AGENTS.md 체계 세팅」에 쓴다. 이미 깐 레포의 설계 변경(모듈·harness 바꾸기)에도 쓴다. paddock 새 버전 반영(sync), CLAUDE.md·AGENTS.md 한 파일만 쓰거나 고치는 일, 에이전트 팀 구성, 코드 리뷰 요청에는 쓰지 않는다.
 ---
 
 # adopt — 프로젝트에 paddock 작업 흐름 깔기
@@ -10,7 +10,7 @@ description: 레포(신규·기존)에 paddock AI 작업 흐름 — AGENTS.md �
 고정 문장을 다시 쓰거나 다듬지 않는다. 마음에 안 들면 paddock 레포에 되돌려 보낸다.
 
 - 자산 계약(층·모듈·변수·슬롯·표기 규약): `${CLAUDE_PLUGIN_ROOT}/assets/README.md` — **0단계 전에 읽는다**
-- 도구: `paddock-render`(render·apply), `paddock-check` — 플러그인 `bin/` 이라 Bash 에서 바로 부른다
+- 도구: `paddock-render`(render·apply·sync), `paddock-check` — 플러그인 `bin/` 이라 Bash 에서 바로 부른다
 - 세부 절차: `${CLAUDE_SKILL_DIR}/references/` 의 `audit.md`(0단계) · `design.md`(1~2단계) · `record.md`(`.paddock/design.md` 형식)
 
 ## 지키는 것
@@ -34,6 +34,7 @@ description: 레포(신규·기존)에 paddock AI 작업 흐름 — AGENTS.md �
 | 5 보고 | 결과·남은 일. 커밋은 사용자 확인 뒤 | — |
 
 재적용(이미 `.paddock/config.sh` 가 있음)은 0단계 표에서 필요한 단계만 고른다 — `audit.md` 「재적용」.
+paddock **버전 갱신**은 이 스킬이 아니라 `sync` 스킬이다.
 
 ## 0. 감사
 
@@ -54,8 +55,8 @@ description: 레포(신규·기존)에 paddock AI 작업 흐름 — AGENTS.md �
 
 `design.md` 「설계 항목」을 하나씩 정한다. 결과는 둘:
 
-- `STAGE/config.sh` — `PADDOCK_VERSION`(플러그인 `.claude-plugin/plugin.json` 의 version), `PADDOCK_MODULES`, `PADDOCK_HARNESS`,
-  자산 변수들(assets/README 「변수」 표 전부), `VARIANT_SUFFIXES`, `PR_FOOTER`
+- `STAGE/config.sh` — `PADDOCK_MODULES`, `PADDOCK_HARNESS`, `PADDOCK_SKIP`(깔지 않을 경로),
+  자산 변수들(assets/README 「변수」 표 전부), `VARIANT_SUFFIXES`, `PR_FOOTER`. `PADDOCK_VERSION` 은 render 가 쓴다
 - `STAGE/design.md` — `record.md` 형식. 항목마다 값·근거·출처. 옮기는 계획(파일·구간 → 목적지)과 슬롯 초안 전문 포함
 
 기본 모듈은 `l1 l2 specs-repo`. `bundle`·`l3` 는 근거가 있을 때만 제안한다. `specs-inrepo` 는 v0 미구현 —
@@ -94,7 +95,7 @@ paddock-render apply "$STAGE/out" "<대상>" --dry-run   # exit 3 이면 충돌 
    `.agents/defaults.md` 는 seed 라 파일째 쓴다. 다른 줄은 손대지 않는다
 4. 기존 내용 옮기기 — 옮기는 계획대로 STAGE 의 목적지 파일(슬롯 안·`rules/*.md`·`learnings/`·스킬)에 넣고,
    대상 레포의 충돌 파일은 계획대로 바꾼다(예: 기존 `CLAUDE.md` 를 지우고 렌더본으로, 기존 `.claude/skills/<x>` 를 `.agents/skills/<x>` 로 `git mv` 한 뒤 빈 `.claude/skills` 를 `rmdir`).
-   깔지 않기로 한 항목(서브에이전트 정의가 있는 `.claude/agents` 등)은 `STAGE/out/.paddock/manifest.tsv` 에서 그 행을 지운다
+   깔지 않기로 한 항목(서브에이전트 정의가 있는 `.claude/agents` 등)은 2단계에서 `PADDOCK_SKIP` 에 넣었어야 한다 — manifest 를 손으로 고치지 않는다(다음 sync 가 되살린다)
 5. `paddock-render apply "$STAGE/out" "<대상>"` — exit 3 이면 남은 충돌을 보고하고 멈춘다(덮어쓰지 않는다)
 6. `STAGE/design.md` 를 `<대상>/.paddock/design.md` 로 복사한다(변경 이력 표에 이번 적용 한 줄)
 7. 훅 — 승인된 계획대로. 기존 `core.hooksPath`·husky 가 없으면 `git -C <대상> config core.hooksPath .githooks` (이 클론에만 적용됨을 보고에 적는다).
