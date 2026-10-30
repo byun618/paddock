@@ -9,11 +9,26 @@ paddock 이 대상 레포에 복사하는 고정 뼈대다. 층·표기 규약·
 | --- | --- | --- | --- |
 | L0 기본 | `l0/` | 항상 | AGENTS.md 지도 틀, CLAUDE.md, `.agents/` 원본 + `.claude/` 심링크, `.codex/agents/`, rules 스텁, learnings·ADR 형식, gitleaks 훅 |
 | L1 작업 흐름 | `l1/` (예정) | 기본 켬 | 게이트 흐름·판정표·리뷰어·task 스킬과 스크립트 |
-| L2 harness | `l2/common/` + `l2/<도구>/` (예정) | 쓰는 도구 하나만 | 능력 계약(공통) + 도구 매핑 |
+| L2 harness | `l2/common/` + `l2/<도구>/` | 쓰는 도구 하나만 | 능력 계약(공통) + 도구 매핑 (아래 「L2 매핑 형식」) |
 | L3 출고 | `l3/` (예정) | 선택 | release 스킬·스크립트 |
 
 `l<층>/` 은 **대상 레포 루트를 그대로 비춘다** — `l0/.agents/rules/writing.md` 는 대상의 `.agents/rules/writing.md` 가 된다.
 역할마다 찍어내는 틀은 레포 루트 `templates/` 에 둔다.
+
+### L2 매핑 형식
+
+코디네이터가 시작할 때 읽는 양을 줄이려고 나눈다 — 읽은 문서는 세션 끝까지 비용이 된다.
+
+| 대상 경로 | 누가 읽나 | 내용 |
+| --- | --- | --- |
+| `.agents/harness/capabilities.md` | 코디네이터(시작 때) | 매핑 선택 · 보장 어휘 · 능력 목록 표(능력 ↔ 파일) · 판정표 반영 |
+| `.agents/harness/contract.md` | 매핑을 쓰는 사람·리뷰어, 절차 문서가 `contract.md H<n>` 으로 가리킬 때 | 네 증명 대상 · 선언 규칙 · 표기 허용 목록 · 도구 무관 사실 H1~H8 |
+| `.agents/harness/<도구>/00-mapping.md` | 코디네이터(시작 때) | 전제 · 보장 요약 · (응답 필드 경로) · 능력 → 파일 목차 |
+| `.agents/harness/<도구>/<능력>.md` | 코디네이터(그 능력을 쓸 때만) | 능력 하나 — `## 『능력』` 절 하나 아래 명령 · 보장 수준 · 상황 → 행동 |
+| `.agents/harness/<도구>/commands.md` | `capability-check.mjs` 만 | `required-commands` · `mentioned-commands` 선언 |
+
+- 능력 파일 이름의 정본은 `capabilities.md` 능력 목록 표의 「파일」 칸이다. 능력을 더하면 표의 행과 도구마다 파일을 같이 더한다.
+- 매핑의 근거(실측 원문·경위)는 자산에 넣지 않는다 — 자산은 실행에 쓰는 규칙만 담는다.
 
 ## 표기 규약
 

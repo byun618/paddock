@@ -58,12 +58,13 @@ check "지금 버전 paddock-check --require-filled 통과" '[ $rc = 0 ]'
 [ $rc = 0 ] || sed 's/^/    /' "$T/out"
 git -C "$T/t" add -A && git -C "$T/t" -c user.name=t -c user.email=t@t commit -qm upgrade
 echo "    바뀐 파일: $(git -C "$T/t" diff --name-only HEAD~1 | tr '\n' ' ')"
+check "매핑은 도구 폴더 하나 — 옛 corral.md 없음, corral/00-mapping.md·commands.md 있음" '[ ! -e "$T/t/.agents/harness/corral.md" ] && [ -f "$T/t/.agents/harness/corral/00-mapping.md" ] && [ -f "$T/t/.agents/harness/corral/commands.md" ]'
 
 echo "U2 harness corral → bare"
 sed 's/^PADDOCK_HARNESS=corral$/PADDOCK_HARNESS=bare/' "$T/t/.paddock/config.sh" > "$T/c-bare.sh"
 "$ROOT/bin/paddock-render" render --config "$T/c-bare.sh" --out "$T/r-bare" >/dev/null
 "$ROOT/bin/paddock-render" sync "$T/r-bare" "$T/t" > "$T/out" 2>&1; rc=$?
-check "sync → exit 0, corral 파일 0, bare 매핑 있음" '[ $rc = 0 ] && [ -z "$(find "$T/t/.agents/harness" -name "*corral*" -o -name session-cleanup.sh)" ] && [ -f "$T/t/.agents/harness/bare.md" ]'
+check "sync → exit 0, corral 파일 0, bare 매핑 있음" '[ $rc = 0 ] && [ -z "$(find "$T/t/.agents/harness" -name "*corral*" -o -name session-cleanup.sh)" ] && [ -f "$T/t/.agents/harness/bare/00-mapping.md" ]'
 "$ROOT/bin/paddock-check" "$T/t" --require-filled > "$T/out" 2>&1; rc=$?
 check "paddock-check 통과 (capability-check 포함)" '[ $rc = 0 ]'
 check "슬롯 그대로" 'slots "$T/t" | cmp -s - "$T/slots-before"'

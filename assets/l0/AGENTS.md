@@ -127,7 +127,7 @@
 
 - 영속 산출물: `{{SPECS_ROOT}}/` 파일 (진실의 원천)
 - 제어 채널: 『감독 워커 기동』·『완료 감지』·『질의응답』. 완료는 워커의 종료 보고로만 본다 (파일·화면·프로세스 종료가 아니다).
-  명령과 보장 수준은 선택한 매핑(.agents/harness/<도구>.md) — 능력이 공백인 도구에서는 그 판정 칸이 공백이다. 절차는 task-coordinate §4
+  명령과 보장 수준은 선택한 매핑(.agents/harness/<도구>/) — 능력이 공백인 도구에서는 그 판정 칸이 공백이다. 절차는 task-coordinate §4
 <!-- /paddock:module -->
 
 ## 어디를 고치나 (증상 → 파일)
@@ -148,7 +148,7 @@
 | --- | --- |
 | 리뷰 품질·형식이 도구마다 흔들린다 | .agents/agents/reviewer.md |
 | 도구가 바뀌면 절차 문서를 다시 쓰게 된다 | .agents/harness/capabilities.md (능력 이름·보장 어휘) |
-| 명령·플래그가 실제와 다르거나 빠져 있다 | .agents/harness/ 의 설치한 매핑 (<도구>.md) |
+| 명령·플래그가 실제와 다르거나 빠져 있다 | .agents/harness/ 의 설치한 매핑 (<도구>/) |
 | 역할별 도구·모델·리뷰어 구성이 흔들린다 | .agents/defaults.md (값) · .agents/defaults.rules.md (규칙) |
 | 무엇을 만들어야 하는지가 흔들린다 | 해당 작업의 01-criteria.md |
 <!-- /paddock:module -->

@@ -4,6 +4,26 @@
 0.x 동안은 minor 가 깨는 변경을 포함할 수 있다.
 `### 재감사` 절은 대상 레포에서 판단이 필요한 변경(새 슬롯·새 변수·바뀐 원칙·바뀐 seed·이름 바뀜)만 적는다 — sync 스킬이 이 절을 읽는다.
 
+## [0.4.0] - 2026-10-30
+
+### Changed
+
+- **L2 매핑 형식 — 도구마다 폴더 하나, 능력마다 파일 하나.** `.agents/harness/<도구>.md` 한 파일이
+  `<도구>/00-mapping.md`(전제·보장 요약·필드 경로·능력 → 파일 목차) · `<도구>/<능력>.md`(능력 11개) · `<도구>/commands.md`(선언)로 나뉜다.
+  코디네이터는 시작 때 `capabilities.md` + `00-mapping.md` 만 읽고, 능력 파일은 그 능력을 쓸 때 연다 — corral 기준 시작 때 읽는 양 약 75KB → 약 18KB
+- `capabilities.md` 를 둘로 — 코디용(매핑 선택·보장 어휘·능력 목록 표·판정표 반영)과 `contract.md`(네 증명 대상·선언 규칙·표기 허용 목록·도구 무관 사실 H1~H8).
+  능력 목록 표에 「파일」 칸이 생겼다
+- `capability-check.mjs`: 깔린 매핑 = `00-mapping.md` 가 있는 폴더. `names` 는 표의 행마다 능력 파일과 그 절 제목을, `shape` 는 능력 파일마다 모양을,
+  `runtime` 은 `commands.md` 의 선언과 폴더 전체 본문을 대조한다. 선언 블록이 `commands.md` 밖에 있으면 불일치. `--mapping` 뒷문은 폴더를 받는다
+- 절차 문서(AGENTS.md·validation·task-coordinate)가 가리키는 매핑 경로를 `<도구>/` 로, 「능력 계약 H<n>」을 `contract.md H<n>` 으로
+
+### 재감사
+
+- 프로젝트 문서(설계 슬롯·rules·프로젝트 스킬·learnings)가 `.agents/harness/<도구>.md`(예: `corral.md`)나 그 안의 절을 가리키면
+  `.agents/harness/<도구>/` 의 해당 파일(목차는 `00-mapping.md`)로 맞춘다
+- 「능력 계약 H<n>」·`capabilities.md H<n>` 으로 도구 무관 사실을 가리키는 프로젝트 문서가 있으면 `contract.md H<n>` 으로 맞춘다
+- 0.3.0 의 `<도구>.md` 를 고친 프로젝트는 sync 가 그 파일을 충돌로 멈춘다 — 고친 내용을 새 능력 파일 자리에 옮길지(되돌려 보내기 후보) 판단한다
+
 ## [0.3.0] - 2026-10-29
 
 ### Added

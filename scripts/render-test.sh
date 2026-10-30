@@ -138,6 +138,32 @@ check "paddock-check → 통과(capability-check names·shape 포함)" '[ $rc = 
 "$C" "$T/cor-r" --require-filled > "$T/out" 2>&1; rc=$?
 check "--require-filled, defaults.md 역할 표 비었음 → 실패" '[ $rc = 1 ] && grep -q "defaults.md 역할 표에 빈 행" "$T/out"'
 
+echo "R9b 매핑 폴더 — capability-check 변이 대조 (능력 파일·제목·선언 파일)"
+H=.agents/harness
+cc() { (cd "$1" && node "$H/capability-check.mjs" "${@:2}" >/dev/null 2>&1); }
+mut() { rm -rf "$T/m" && cp -R "$1" "$T/m"; }
+cc "$T/cor-r" names; a=$?; cc "$T/cor-r" shape; b=$?
+check "기준선 corral → names·shape 0" '[ $a = 0 ] && [ $b = 0 ]'
+mut "$T/cor-r"; rm "$T/m/$H/corral/qa.md"; cc "$T/m" names; rc=$?
+check "능력 파일 하나 지움 → names 1" '[ $rc = 1 ]'
+mut "$T/cor-r"; printf '<!-- paddock:fixed -->\n## 『없는 능력』\n' > "$T/m/$H/corral/extra.md"; cc "$T/m" names; rc=$?
+check "표에 없는 능력 파일 → names 1" '[ $rc = 1 ]'
+mut "$T/cor-r"; sed -i.b 's/^## 『질의응답』$/## 『질문』/' "$T/m/$H/corral/qa.md"; cc "$T/m" names; rc=$?
+check "능력 파일의 절 제목이 표와 다름 → names 1" '[ $rc = 1 ]'
+mut "$T/cor-r"; sed -i.b 's/^- \*\*복구\*\*/- 복구/' "$T/m/$H/corral/inject.md"; cc "$T/m" shape; rc=$?
+check "능력 파일에서 상황 항목 하나 빠짐 → shape 1" '[ $rc = 1 ]'
+cfg "$T/bare.sh" "l1 l2 specs-repo"
+printf 'PADDOCK_HARNESS=bare\nISSUE_PREFIX=\nSPECS_ROOT=../demo-specs\nBASE_BRANCH=main\nBUNDLE_PREFIX=feature/\nMAX_FIX_ROUNDS=3\n' >> "$T/bare.sh"
+"$R" render --config "$T/bare.sh" --out "$T/bare" >/dev/null && mkdir -p "$T/bare-r" && "$R" apply "$T/bare" "$T/bare-r" >/dev/null
+cc "$T/bare-r" runtime --tool bare; rc=$?
+check "기준선 bare runtime → 3 (광고 대조만 공백)" '[ $rc = 3 ]'
+mut "$T/bare-r"; awk '/^```required-commands/{print; skip=1; next} /^```/{skip=0} !skip{print}' "$T/m/$H/bare/commands.md" > "$T/x" && mv "$T/x" "$T/m/$H/bare/commands.md"; cc "$T/m" runtime --tool bare; rc=$?
+check "선언 파일의 required 비움 → runtime 1" '[ $rc = 1 ]'
+mut "$T/bare-r"; printf '\n`tmux kill-server -a`\n' >> "$T/m/$H/bare/screen.md"; cc "$T/m" runtime --tool bare; rc=$?
+check "능력 파일이 선언 없는 명령을 씀 → runtime 1" '[ $rc = 1 ]'
+mut "$T/bare-r"; printf '\n```mentioned-commands\nkill-server   # 사유\n```\n' >> "$T/m/$H/bare/screen.md"; cc "$T/m" runtime --tool bare; rc=$?
+check "선언 블록을 commands.md 밖에 둠 → runtime 1" '[ $rc = 1 ]'
+
 echo "R10 PADDOCK_SKIP — 깔지 않기로 한 경로"
 cfg "$T/skip.sh" ""; printf 'PADDOCK_SKIP=".claude/agents .agents/agents"\n' >> "$T/skip.sh"
 "$R" render --config "$T/skip.sh" --out "$T/skip" >/dev/null; rc=$?
