@@ -59,7 +59,7 @@
 <!-- /paddock:module -->
 <!-- paddock:module l1 -->
 
-- 스킬 파일: .agents/skills/task-start · task-coordinate (각 SKILL.md). 역할별 도구·모델·effort·리뷰어 구성의 값은 .agents/defaults.md, 규칙은 .agents/defaults.rules.md
+- 스킬 파일: .agents/skills/task-start · task-coordinate (각 SKILL.md). 역할별 도구·모델·effort·리뷰어 구성의 값은 .agents/defaults.md, 규칙은 .agents/defaults.rules.md, 도구별 가용성 확인 방법은 .agents/agent-tools.md
 <!-- /paddock:module -->
 <!-- paddock:module l3 -->
 - 출고 스킬: .agents/skills/release/SKILL.md
@@ -150,6 +150,7 @@
 | 도구가 바뀌면 절차 문서를 다시 쓰게 된다 | .agents/harness/capabilities.md (능력 이름·보장 어휘) |
 | 명령·플래그가 실제와 다르거나 빠져 있다 | .agents/harness/ 의 설치한 매핑 (<도구>/) |
 | 역할별 도구·모델·리뷰어 구성이 흔들린다 | .agents/defaults.md (값) · .agents/defaults.rules.md (규칙) |
+| 리뷰어를 쓸 수 있는지 판단을 못 한다·첫 화면에서 막힌다 | .agents/agent-tools.md (도구별 카탈로그·사용량·첫 사용 화면) |
 | 무엇을 만들어야 하는지가 흔들린다 | 해당 작업의 01-criteria.md |
 <!-- /paddock:module -->
 

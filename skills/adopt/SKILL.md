@@ -109,12 +109,17 @@ paddock-check "<대상>" --require-filled      # l1 을 끈 레포는 --require-
 
 - 훅: `git -C <대상> config core.hooksPath` 가 계획과 같은지, `command -v gitleaks` — 없으면 「첫 커밋이 막힌다, 설치 필요」를 보고 맨 위에
 - `l2` 를 켰고 그 도구가 설치돼 있으면 `node .agents/harness/capability-check.mjs runtime --tool <도구>` 도 돌린다. 없으면 「공백」으로 보고
+- `defaults.md` 에 적은 에이전트 도구마다 `.agents/agent-tools.md` 의 **명령 블록**(세션을 띄우지 않는 확인)을 한 번 돌려 결과(있음/없음/확인 실패·사용률)를 보고에 싣는다.
+  세션을 띄워 화면을 읽어야 하는 확인(Grok 한도 등)은 하지 않는다 — 대상 디렉터리의 trust 를 사람이 치우기 전이라 화면이 막히고, 첫 작업의 task-start 가 한다.
+  지정 리뷰어가 「없음」이면 보고 맨 위에 — 첫 작업의 리뷰가 대체 구성으로 돈다
 - 실패하면 고친다 — 고정 부분 drift 면 그 파일을 렌더본으로 되돌리고, 슬롯이 비었으면 채운다. 같은 실패가 두 번이면 멈추고 보고
 - 대상 레포 테스트를 돌릴 필요는 없다(코드를 바꾸지 않았다). 단 옮긴 스킬이 스크립트를 가리키면 경로가 살아 있는지 본다
 
 ## 5. 보고
 
 - 판정·모듈·harness, 생성/옮김/그대로 둔 파일 수, 검증 결과(명령 출력 요지)
-- 사람이 할 일: 커밋(제안 메시지 포함), 다른 클론의 `core.hooksPath`, specs 레포 push 여부
+- 사람이 할 일: 커밋(제안 메시지 포함), 다른 클론의 `core.hooksPath`, specs 레포 push 여부,
+  **첫 사용 화면 치우기** — `defaults.md` 의 도구마다 이 레포 디렉터리에서 한 번 띄워 trust 를 답해 둔다(`agent-tools.md` 「첫 사용 화면」).
+  Codex 를 쓰면 `~/.codex/config.toml` 의 `check_for_update_on_startup = false` 를 제안한다 — 사용자 전역 설정이라 adopt 가 쓰지 않는다
 - 공백·미확인으로 남긴 설계 항목(「확인 필요」)과 다음에 볼 곳
 - **커밋하지 않는다** — 사용자가 diff 를 보고 정한다. 요청받으면 그때 한다
