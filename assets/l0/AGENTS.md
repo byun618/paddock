@@ -23,7 +23,7 @@
   루트 공용 파일(00-project.md 등)은 바꾼 세션(본체 또는 그 일감의 코디)이 그 파일만 지정해 커밋한다
 <!-- /paddock:module -->
 <!-- paddock:module bundle -->
-- 묶음 자식의 00-start 는 묶음 코디가 커밋하고, 묶음 코디는 분해·알림·출고 중 수정 기록 때도 커밋한다 — task-coordinate references/bundle.md 2·4·6
+- 묶음 자식의 00-start 는 묶음 코디가 커밋하고, 묶음 코디는 분해·알림·열린 묶음 PR 수정 기록 때도 커밋한다 — task-coordinate references/bundle.md 2·4·6
 <!-- /paddock:module -->
 <!-- paddock:module l1 -->
 - `{{SPECS_ROOT}}/` 파일이 진실의 원천. 세션 간 조율은 파일로 한다 — 세션 컨텍스트는 휘발됨
@@ -48,10 +48,11 @@
 | 5 코드 리뷰 — 별도 세션, 재리뷰도 새 세션 | 리뷰어 | raw/review/, reviews.md | §5 |
 | 6 판정 → **게이트 ①** | 코디 | verdict.md | §6·§7 |
 | 7 사용자 확인 → **게이트 ②** = 기록·PR 생성·정리 | 코디 | devlog.md, learnings-proposal.md, adr-draft-*.md, handoff-main.md, pr.md | §8 |
+| 8 머지 뒤 마무리 — 머지(사용자 확인)·머지 뒤 확인·인계 항목·회고·완료·정리 | 본체 | close.md | task-close |
 <!-- /paddock:module -->
 <!-- paddock:module l3 -->
 
-8 출고 — release/vX.Y.Z 자르기·PR 모으기·통합 확인·회고 → {{BASE_BRANCH}} 머지·태그·릴리즈 노트·출고 산출물 (본체, release 스킬). 산출물은 GitHub Release 와 출고 회고(release §4)
+출고 — release/vX.Y.Z 자르기·PR 모으기·통합 확인·회고 → {{BASE_BRANCH}} 머지·태그·릴리즈 노트·출고 산출물 (본체, release 스킬). 산출물은 GitHub Release 와 출고 회고(release §4)
 <!-- /paddock:module -->
 <!-- paddock:module bundle -->
 
@@ -59,7 +60,7 @@
 <!-- /paddock:module -->
 <!-- paddock:module l1 -->
 
-- 스킬 파일: .agents/skills/task-start · task-coordinate (각 SKILL.md). 역할별 도구·모델·effort·리뷰어 구성의 값은 .agents/defaults.md, 규칙은 .agents/defaults.rules.md, 도구별 가용성 확인 방법은 .agents/agent-tools.md
+- 스킬 파일: .agents/skills/task-start · task-coordinate · task-close (각 SKILL.md). 역할별 도구·모델·effort·리뷰어 구성의 값은 .agents/defaults.md, 규칙은 .agents/defaults.rules.md, 도구별 가용성 확인 방법은 .agents/agent-tools.md
 <!-- /paddock:module -->
 <!-- paddock:module l3 -->
 - 출고 스킬: .agents/skills/release/SKILL.md
@@ -150,6 +151,7 @@
 | 도구가 바뀌면 절차 문서를 다시 쓰게 된다 | .agents/harness/capabilities.md (능력 이름·보장 어휘) |
 | 명령·플래그가 실제와 다르거나 빠져 있다 | .agents/harness/ 의 설치한 매핑 (<도구>/) |
 | 역할별 도구·모델·리뷰어 구성이 흔들린다 | .agents/defaults.md (값) · .agents/defaults.rules.md (규칙) |
+| 머지 뒤 확인·배포·마이그레이션 순서가 흔들린다 | .agents/skills/task-close/SKILL.md 3단계 (D16) |
 | 리뷰어를 쓸 수 있는지 판단을 못 한다·첫 화면에서 막힌다 | .agents/agent-tools.md (도구별 카탈로그·사용량·첫 사용 화면) |
 | 무엇을 만들어야 하는지가 흔들린다 | 해당 작업의 01-criteria.md |
 <!-- /paddock:module -->

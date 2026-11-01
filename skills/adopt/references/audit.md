@@ -43,6 +43,9 @@
 | 일부 겹치고, 일반화하면 paddock 쪽 슬롯에 들어감 | 그 내용을 슬롯으로 옮기고 기존 스킬은 위 1행처럼 |
 | 범위가 다름 | `.agents/skills/` 로 옮기기만 한다(`.claude/skills` 가 심링크가 되므로) |
 
+- 머지·머지 뒤(배포·마이그레이션·완료 전이·정리) 스킬은 `task-close` 와 겹친다 — 프로젝트 특화 단계는 D16 슬롯으로 옮기고 기존 스킬은 「대체됨」(지울지 묻는다).
+  출고(버전·태그·PR 모으기)를 하는 스킬은 l3 자리라 그대로 두고 l3 를 켤지 묻는다.
+
 `.claude/{rules,skills,agents}` 가 실제 폴더면 내용을 `.agents/` 같은 이름 아래로 `git mv` 하고 남은 빈 폴더를 지우는 것(`rmdir`)이 기본이다 — 그래야 심링크를 깔 수 있다.
 에이전트 파일(`.claude/agents/*.md`)은 서브에이전트 정의일 수 있다 — paddock 의 `.agents/agents/` 는 「세션이 읽는 역할 지침서」라 뜻이 다르다. 서브에이전트 정의는 그대로 두고 `.claude/agents` 심링크를 깔지 않는다 — config 의 `PADDOCK_SKIP` 에 `.claude/agents` 를 넣고(render·sync·paddock-check 가 따른다) 설계에 적는다.
 

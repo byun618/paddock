@@ -5,9 +5,7 @@
 묶음 코디 = 서로 의존하는 작업 묶음(체크포인트) 하나를 맡는 코디네이터. feature worktree(`{{WORKTREE_DIR}}/{{BUNDLE_NAME}}`,
 `{{BUNDLE_PREFIX}}{{BUNDLE_NAME}}` 체크아웃)에서 돈다. **한 묶음에 묶음 코디는 하나다** — task-start 가 띄우고, 활성 묶음 코디가 있으면 새로 만들지 않는다.
 재개된 묶음 코디는 `00-start.md` 이력의 마지막 상태와 feature PR 유무로 이어 갈 절을 정한다.
-<!-- paddock:module l3 -->
-PR 이 열려 있으면 6 의 「출고 중 수정」으로 간다.
-<!-- /paddock:module -->
+PR 이 열려 있으면 6 의 「열린 묶음 PR 수정」으로 간다.
 작업 폴더는 체크포인트 폴더 `{{SPECS_ROOT}}/{{BUNDLE_NAME}}/`(절대경로)다.
 
 **이 문서에는 도구 명령이 없다.** 제어 도구 동작은 능력 이름(겹낫표)으로만 적고 명령은 선택한 하네스 매핑에서 읽는다(`.agents/harness/capabilities.md`).
@@ -27,8 +25,9 @@ git 명령 블록은 그대로 쓴다. 아래의 SendMessage(세션 목록 ListA
 
 일감 상태 전이(트래커를 쓸 때): 진행 중 전이는 task-start 5단계를 실행한 쪽이 한다 — 체크포인트는 묶음 코디를 띄운 본체, 자식은 그 자식을 시작한 묶음 코디(3 절).
 그 뒤 자식의 전이(분석 중·개발 중·검증 중)는 자식 코디가 한다.
+체크포인트·자식의 완료 전이는 묶음 PR 이 머지된 뒤 본체의 머지 뒤 마무리(task-close 6단계)다.
 <!-- paddock:module l3 -->
-체크포인트·자식의 완료 전이는 출고(release §7)다.
+출고를 쓰면 출고(release §7)가 한다.
 <!-- /paddock:module -->
 체크포인트 자신은 진행 중에 둔다 — 분해 전이라 §1 을 따를 때도 §1 첫 줄의 분석 중 전이는 하지 않는다.
 
@@ -74,9 +73,7 @@ git 명령 블록은 그대로 쓴다. 아래의 SendMessage(세션 목록 ListA
     「묶음 코디에게 반영 시작을 알려 달라」로 적어 사용자에게 맡긴다. 본체 → 묶음(task-start 2단계 「그 세션에 넘긴다」)은 둘 다 claude 면 SendMessage,
     아니면 묶음 코디가 입력 대기일 때 『본문 주입』, 그것도 공백인 매핑이면 사용자 전달이다.
     묶음 → 본체(2 의 묶음 밖으로 뺀 자식)도 같은 순서다 — 둘 다 claude 면 SendMessage, 아니면 본체가 입력 대기일 때 『본문 주입』, 공백이면 사용자 보고에 적어 전달을 맡긴다.
-<!-- paddock:module l3 -->
-    6 의 출고 중 수정 반영 통지도 같은 통로다.
-<!-- /paddock:module -->
+    6 의 열린 묶음 PR 수정 반영 통지도 같은 통로다.
   - 보장 수준: 배달은 매핑의 『본문 주입』 수준을 따른다. 받은 쪽이 읽고 처리했다는 확인은 어느 매핑에서도 공백이다.
 - **반영 알림**(task-coordinate §8): 자식 코디는 `task-finish.sh --into` 직전에 알린다 — 반영과 정리가 한 명령이라 알림은 **반영 시작(결과 미확정)** 이다.
   묶음 코디는 원격 feature 가 이 worktree 의 `HEAD` 와 다른 것을 본 뒤에야 반영으로 본다 — 묶음 코디는 자기 커밋을 바로 push 하므로(5)
@@ -104,7 +101,7 @@ git fetch origin {{BASE_BRANCH}} && git merge origin/{{BASE_BRANCH}} && git push
 1. 5 대로 feature worktree 를 올리고 **묶음 통합 확인** — 이 worktree 에서 빌드·실행해 `01-criteria.md` 의 묶음 기준을 확인하고
    사용자에게 직접 실행·확인을 요청한다(실행 방법 한 줄 — task-coordinate §8 의 통합 결과 확인 방법).
 2. 묶음 폴더에 `verdict.md`(자식 판정 링크·묶음 확인 결과 — 판정표는 `.agents/rules/validation.md` 7칸)·`pr.md`(자식들을 묶어 task-coordinate §8 의 PR 원고 방식으로)·
-   `handoff-main.md`(PR base `{{BASE_BRANCH}}`, 실린 자식 일감, 트래커 다음 전이)를 쓴다.
+   `handoff-main.md`(PR base `{{BASE_BRANCH}}`, 실린 자식 일감, 트래커 다음 전이, **머지 뒤 확인할 것**·**필수 후속 항목** — 자식 인계 문서들의 것을 모아서. 본체의 task-close 3·4단계가 읽는다)를 쓴다.
 <!-- paddock:module l3 -->
    출고 회고(release §4)는 이 `verdict.md` 의 자식 판정 링크로 자식 폴더를 찾는다.
 <!-- /paddock:module -->
@@ -121,14 +118,16 @@ git fetch origin {{BASE_BRANCH}} && git merge origin/{{BASE_BRANCH}} && git push
    feature 의 첫 고유 커밋보다 먼저 딴 자식은 못 센다**. 자식 중 하나라도 `push -u`·`--no-track` 을 썼고 첫 자식 반영 전에 딴 것이면 정리 전에 `git worktree list` 로 자식 worktree 를 직접 본다.
    남은 자식이 있으면 멈춘다 — 그 자식의 `--into` 를 기다리거나 사용자에게 보고한다. 스크립트가 실패하면 멈추고 원문을 보고한다 — 남은 정리는 같은 명령으로 이어 간다(멱등).
    사용자에게 스크립트 출력 원문과 함께 PR 번호·`handoff-main.md` 절대경로를 보고하고 "PR 생성·정리 완료"라고 끝낸다.
+   **묶음 코디의 수명은 여기까지다** — 머지와 머지 뒤 마무리는 본체 세션의 `task-close`.
 <!-- paddock:module l3 -->
-   "출고 대기"를 덧붙인다. **묶음 코디의 수명은 여기까지다** — 출고는 본체(release).
+   "출고 대기"를 덧붙인다 — 출고를 쓰면 머지는 본체의 release 가 PR 을 모아 한다.
 <!-- /paddock:module -->
-<!-- paddock:module l3 -->
-5. **출고 중 수정**(release §2)이 묶음 PR 에 필요하면: 본체가 feature worktree 를 **다시 열고** 묶음 코디를 재기동한다 — task-start 2단계 「체크포인트 시작」의
+5. **열린 묶음 PR 수정** — 머지 전에 묶음 PR 을 고쳐야 하면: 본체가 feature worktree 를 **다시 열고** 묶음 코디를 재기동한다 — task-start 2단계 「체크포인트 시작」의
    feature 가 이미 있는 경우(만들기·push 는 건너뛰고 feature worktree 블록 `git worktree add "$ROOT/{{WORKTREE_DIR}}/{{BUNDLE_NAME}}" {{BUNDLE_PREFIX}}{{BUNDLE_NAME}}` 와 묶음 코디만).
    로컬 feature 가 없어도 원격 feature(PR head)에서 추적 브랜치를 만들어 연다. 재기동된 묶음 코디는 머리의 재개 규칙(열린 PR)으로 이 절에 온다.
    정리(이 절 4)를 마친 옛 묶음 코디 세션은 작업 폴더(feature worktree)가 사라졌으므로 쓰지 않는다 — 남아 있으면 『회수·정리』로 닫고 새로 기동한다.
-   묶음 코디는 수정 자식을 feature 에서 시작해(3 절) 반영을 받고(5 절) feature 를 push 하고, 이 절 2 에서 쓴 `verdict.md` 자식 판정 링크와 `handoff-main.md` 실린 자식에 수정 자식을 더해 커밋·push 한 뒤 본체에 알린다(4 절의 묶음 → 본체 통로) — 본체가 같은 PR 을 다시 `gather` 한다.
-   알린 뒤 이 절 4 의 정리를 다시 한다(마지막 실행).
+   묶음 코디는 수정 자식을 feature 에서 시작해(3 절) 반영을 받고(5 절) feature 를 push 하고, 이 절 2 에서 쓴 `verdict.md` 자식 판정 링크와 `handoff-main.md` 실린 자식에 수정 자식을 더해 커밋·push 한 뒤 본체에 알린다(4 절의 묶음 → 본체 통로) — push 로 같은 PR 이 갱신된다.
+<!-- paddock:module l3 -->
+   출고 중 수정(release §2)이면 본체가 같은 PR 을 다시 `gather` 한다.
 <!-- /paddock:module -->
+   알린 뒤 이 절 4 의 정리를 다시 한다(마지막 실행).

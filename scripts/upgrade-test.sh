@@ -48,10 +48,28 @@ slots "$T/t" > "$T/slots-before"
 echo "U1 버전 갱신"
 "$ROOT/bin/paddock-render" render --config "$T/t/.paddock/config.sh" --out "$T/r-new" >/dev/null
 "$ROOT/bin/paddock-render" sync "$T/r-new" "$T/t" > "$T/out" 2>&1; rc=$?
+cp "$T/out" "$T/sync-out"
 sed 's/^/    /' "$T/out" | tail -n 25
 check "sync → exit 0" '[ $rc = 0 ]'
 slots "$T/t" > "$T/slots-after"
-check "채운 슬롯 전부 바이트 같음 ($(wc -l < "$T/slots-before" | tr -d ' ')줄)" 'cmp -s "$T/slots-before" "$T/slots-after"'
+# 새 버전이 더한 슬롯(파일·ID#순번이 지난 버전에 없던 것)은 비교에서 빼고, sync 가 「새 슬롯」으로 보고했는지 본다
+cut -f1,2 "$T/slots-before" | sort -u > "$T/keys-before"
+awk -F'\t' 'NR==FNR {k[$1 "\t" $2]=1; next} ($1 "\t" $2) in k' "$T/keys-before" "$T/slots-after" > "$T/slots-after-old"
+check "채운 슬롯 전부 바이트 같음 ($(wc -l < "$T/slots-before" | tr -d ' ')줄)" 'cmp -s "$T/slots-before" "$T/slots-after-old"'
+NEWSLOTS=$(cd "$T/t" && grep -v '^#' .paddock/manifest.tsv | awk -F'\t' '$2 == "managed" {print $1}' | while read -r f; do
+  awk -v f="$f" '/<!-- paddock:design [^ ]+ -->/ {id=$0; sub(/.*paddock:design /,"",id); sub(/ -->.*/,"",id); print f "\t" id "#" (++n[id])}' "$f"; done \
+  | awk -F'\t' 'NR==FNR {k[$1 "\t" $2]=1; next} !(($1 "\t" $2) in k)' "$T/keys-before" -)
+if [ -n "$NEWSLOTS" ]; then
+  check "새 슬롯 $(printf '%s\n' "$NEWSLOTS" | wc -l | tr -d ' ')개 모두 sync 가 「새 슬롯」으로 보고" \
+    'printf "%s\n" "$NEWSLOTS" | while IFS="$(printf "\t")" read -r f k; do grep -q "새 슬롯.*$f.*${k%%#*}" "$T/sync-out" || exit 1; done'
+  "$ROOT/bin/paddock-check" "$T/t" --require-filled > "$T/out-empty" 2>&1; rc=$?
+  check "채우기 전 --require-filled 는 새 슬롯이 비어 실패" '[ $rc != 0 ] && grep -q "비었다" "$T/out-empty"'
+  # 재감사를 흉내 내 새 슬롯만 채운다 — 이후 U2·U3 기준선에 넣는다
+  printf '%s\n' "$NEWSLOTS" | cut -f1 | sort -u | while read -r f; do
+    (cd "$T/t" && awk -v f="$f" -v keys="$(printf '%s\n' "$NEWSLOTS" | awk -F'\t' -v f="$f" '$1==f {printf "%s ", $2}')" \
+      '{print} /<!-- paddock:design [^ ]+ -->/ {id=$0; sub(/.*paddock:design /,"",id); sub(/ -->.*/,"",id); k=id "#" (++n[id]); if (index(" " keys, " " k " ")) print "채움 " f " " k}' "$f" > "$f.tmp" && mv "$f.tmp" "$f"); done
+  slots "$T/t" > "$T/slots-before"
+fi
 check "config 버전 = $NOW" 'grep -qx "PADDOCK_VERSION=$NOW" "$T/t/.paddock/config.sh"'
 "$ROOT/bin/paddock-check" "$T/t" --require-filled > "$T/out" 2>&1; rc=$?
 check "지금 버전 paddock-check --require-filled 통과" '[ $rc = 0 ]'

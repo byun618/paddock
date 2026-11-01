@@ -167,4 +167,6 @@ case "$HEAD_BRANCH" in
 esac
 if has_module l3; then
   echo "□ 머지는 이 스크립트가 하지 않는다 — 출고(release) 흐름에서 한다"
+else
+  echo "□ 머지와 머지 뒤 마무리(머지 뒤 확인·완료·정리)는 본체 세션의 task-close 가 한다 — 이 스크립트는 머지하지 않는다"
 fi

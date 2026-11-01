@@ -172,6 +172,7 @@ check() { # check <설명> <명령…>
   if "$@" >/dev/null 2>&1; then echo "  ok   $d" >> "$LOG"; else echo "  FAIL $d" >> "$LOG"; CASE_FAIL=1; fi
 }
 has() { grep -qF -- "$1" "$LAST"; }
+not_has() { ! grep -qF -- "$1" "$LAST"; }
 not() { ! "$@"; }
 unchanged() { cmp -s "$W/before-$N.txt" "$W/after-$N.txt"; }
 rc_is() { [ "$RC" = "$1" ]; }
@@ -425,10 +426,12 @@ case_P1() { CFG_MODULES="l1 l2 specs-repo bundle l3"; CFG_FOOTER="-- 서명 줄"
   check "exit 0" rc_is 0; check "PR 하나" pr_count 1; check "제목에 ID 접두가 붙음" pr_title "TASK-901: 제목"
   check "본문 = 원고" body_has "본문 줄"; check "본문에 판정문 위치" body_has "산출물 레포 \`$t/verdict.md\`"; check "본문 끝 서명" body_has "-- 서명 줄"; check "l3 켬 — 출고 언급" body_has "출고(release)"
   check "작업 브랜치 push 됨" [ -n "$(remote_oid "$t")" ]; check "산출물 레포 push 됨" [ -n "$(git --git-dir="$W/specs-origin.git" rev-parse -q --verify refs/heads/main)" ]
-  check "마지막 안내" has "□ 다음: PR 을 머지한 뒤 작업 정리는 scripts/task-finish.sh $t"; }
+  check "마지막 안내" has "□ 다음: PR 을 머지한 뒤 작업 정리는 scripts/task-finish.sh $t"
+  check "l3 켬 — 머지는 출고" has "출고(release) 흐름에서 한다"; check "l3 켬 — task-close 안내 없음" not_has "task-close"; }
 case_P2() { setup; local t=TASK-901-t; mk_indep "$t"; mk_specs "$t"   # 멱등 — 다시 돌리면 같은 PR 을 갱신한다
   run_pr "$t"; printf '# 제목 둘\n\n본문 둘\n' > "$W/specs/$t/pr.md"; git -C "$W/specs" commit -qam v2
   run_pr "$t"
+  check "l3 끔 — 머지는 task-close" has "본체 세션의 task-close 가 한다"; check "l3 끔 — 출고 언급 없음" not_has "release"
   check "재실행 exit 0" rc_is 0; check "PR 여전히 하나" pr_count 1; check "기존 PR 재사용 안내" has "기존 PR #1 재사용"; check "제목 갱신" pr_title "TASK-901: 제목 둘"; check "본문 갱신" body_has "본문 둘"; }
 case_P3() { CFG_PREFIX=""; CFG_MODULES="l1 l2 specs-repo"; setup; local t=slug-t; mk_indep "$t"; mk_specs "$t"   # ID 없음 + l3 끔 + 서명 없음
   run_pr "$t"

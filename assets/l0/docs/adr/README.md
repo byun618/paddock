@@ -15,8 +15,11 @@
 <!-- paddock:module l1 -->
 - 초안 = 게이트 ②(task-coordinate §8).
 <!-- /paddock:module -->
+<!-- paddock:module l1 -->
+- 채택 = 머지 뒤 회고(task-close §5).
+<!-- /paddock:module -->
 <!-- paddock:module l3 -->
-- 채택 = 출고 회고(release §4).
+- 출고를 쓰면 채택은 출고 회고(release §4)가 한다.
 <!-- /paddock:module -->
 - 파일 이름 `docs/adr/NNNN-<제목-케밥>.md`. 초안은 번호 없이 `status: proposed`.
 - **번호는 채택할 때 매긴다** — 이 폴더의 가장 큰 번호 + 1, 네 자리(`0001`). 초안 단계에서 번호를 집지 않는다

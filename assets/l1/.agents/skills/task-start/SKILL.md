@@ -66,7 +66,7 @@ description: >-
      트래커 부모가 체크포인트라는 것만으로 묶음 자식이 되지 않는다(판단 기준은 의존이다).
    - **체크포인트 시작**(묶음 열기): 체크포인트 일감 자체를 시작하면 이 경로다(분해 뒤 자식이 하나뿐이면 묶음 코디 절차 2 가 접는다). 작업 브랜치 `{{BUNDLE_NAME}}` 를 만들지 않는다. `origin/{{BASE_BRANCH}}` 최신에서 feature 를 만들어 origin 에 push 하고,
      feature worktree 를 그 feature 체크아웃으로 연다 — 이 worktree 가 **묶음 코디**의 작업 worktree 다. 만료일(기본 시작일 + 2주)을 00-start 에 적는다.
-     feature 가 이미 있으면(묶음 코디 없이 자식만 시작된 경우, 출고 중 수정으로 정리된 feature worktree 를 다시 여는 경우 — 묶음 코디 절차 6) 만들기·push 는 건너뛰고 feature worktree 와 묶음 코디만 연다.
+     feature 가 이미 있으면(묶음 코디 없이 자식만 시작된 경우, PR 을 연 뒤 수정하려고 정리된 feature worktree 를 다시 여는 경우 — 묶음 코디 절차 6) 만들기·push 는 건너뛰고 feature worktree 와 묶음 코디만 연다.
      **본체가 이미 분해·자식 시작을 했어도 묶음 코디는 띄운다** — 00-start 분해 상태는 3단계.
      묶음 코디가 하는 일은 [묶음 코디 절차](../task-coordinate/references/bundle.md)가 원본이다.
    ```bash
@@ -170,7 +170,7 @@ description: >-
 - 포커스 전환 때문에 문제가 나면 포커스 없이 만든 뒤 별도로 전환한다.
 - 화면 읽기·목록·본문 길이의 **수치 상한은 매핑에서 확인한다** — 줄 수와 바이트를 혼동하면 원자료가 잘린다.
 - 시작 세션은 킥오프 전달 후 구현을 지휘하지 않는다. 이후 과정은 선택된 코디네이터가 맡고,
-  PR 생성 승인 뒤 코디네이터가 PR 을 열고 정리까지 한다.
+  PR 생성 승인 뒤 코디네이터가 PR 을 열고 정리까지 한다. 본체 세션은 머지 뒤 마무리(`task-close`) 때 돌아온다.
 <!-- paddock:module l3 -->
-  본체 세션은 출고(`release.sh` cut·gather·ship — release 스킬) 때 돌아온다(task-coordinate §8).
+  출고를 쓰면 출고(`release.sh` cut·gather·ship — release 스킬) 때 돌아온다(task-coordinate §8).
 <!-- /paddock:module -->
