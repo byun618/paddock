@@ -46,4 +46,3 @@
 | 『회수·정리』 | [cleanup.md](cleanup.md) |
 | 『세션 기록 오라클』 | [session-record.md](session-record.md) |
 | 『제어 문맥 격리』 | [isolation.md](isolation.md) |
-| 『게이트 알림』 | [notify.md](notify.md) |

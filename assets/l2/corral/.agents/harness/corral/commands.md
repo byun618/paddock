@@ -33,14 +33,14 @@ orchestration worker-release        # 『회수·정리』 — 정리
 orchestration worker-stop           # 『회수·정리』 — 수렴하지 않는 시도 끝내기
 orchestration worker-abandon        # 『회수·정리』 — 아무 조치 없이 포기
 terminal create                     # 『세션 기동』
-terminal wait                       # 『준비 대기』·『게이트 알림』 대체 경로
+terminal wait                       # 『준비 대기』
 terminal prompt                     # 『본문 주입』 — 배달 증명
-terminal read                       # 『화면 관측』·『게이트 알림』 대체 경로
+terminal read                       # 『화면 관측』
 terminal show                       # 『세션 기동』 관측 — 실제 argv
 terminal list                       # 『회수·정리』 — 세션 목록
 terminal send                       # 『본문 주입』 우회 경로 (증명 없음 — 쓰지 않는다고 적기 위해 선언)
 terminal close                      # 『회수·정리』 — 빌린 pane 을 따로 닫는다
-terminal switch                     # 『세션 기동』·『게이트 알림』 — 포커스 전환
+terminal switch                     # 『세션 기동』 — 포커스 전환
 worktree set                        # 『감독 워커 기동』 — git 으로 만든 구현·리뷰 worktree 의 상위를 지정(표시용)
 ```
 

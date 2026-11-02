@@ -101,4 +101,3 @@ corral CLI 로 어떻게 수행하고, **무엇까지 증명되는지**를 적�
 | 『회수·정리』 | [cleanup.md](cleanup.md) |
 | 『세션 기록 오라클』 | [session-record.md](session-record.md) |
 | 『제어 문맥 격리』 | [isolation.md](isolation.md) |
-| 『게이트 알림』 | [notify.md](notify.md) |
