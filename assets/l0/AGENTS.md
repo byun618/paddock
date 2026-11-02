@@ -17,7 +17,7 @@
 <!-- /paddock:module -->
 <!-- paddock:module specs-repo -->
 - **쓰기와 커밋** — 본체·코디·워커·리뷰어 모두 그 폴더에 **절대경로로 직접** 쓴다(worktree 안 상대경로 금지).
-  커밋은 그 일감의 코디(00-start 는 시작한 세션 — 본체)만, 게이트 시점에, **자기 폴더만** 한다:
+  커밋은 그 일감의 코디(00-start 는 시작한 세션 — 본체)만, 게이트 시점에, **자기 폴더만** 한다. 시작 세션이 전달 뒤 쓰는 `delivery.md` 도 코디가 커밋한다:
   `git -C {{SPECS_ROOT}} add -- {{TASK_NAME}}/ && git -C {{SPECS_ROOT}} commit -m "…" -- {{TASK_NAME}}/ && git -C {{SPECS_ROOT}} push` (경로는 절대경로로).
   여러 일감이 한 working copy 를 같이 쓰므로 남의 폴더를 add 하지 않고, `index.lock` 이면 잠시 뒤 다시 한다. 워커·리뷰어는 커밋하지 않는다.
   루트 공용 파일(00-project.md 등)은 바꾼 세션(본체 또는 그 일감의 코디)이 그 파일만 지정해 커밋한다

@@ -121,5 +121,7 @@ paddock-check "<대상>" --require-filled      # l1 을 끈 레포는 --require-
 - 사람이 할 일: 커밋(제안 메시지 포함), 다른 클론의 `core.hooksPath`, specs 레포 push 여부,
   **첫 사용 화면 치우기** — `defaults.md` 의 도구마다 이 레포 디렉터리에서 한 번 띄워 trust 를 답해 둔다(`agent-tools.md` 「첫 사용 화면」).
   Codex 를 쓰면 `~/.codex/config.toml` 의 `check_for_update_on_startup = false` 를 제안한다 — 사용자 전역 설정이라 adopt 가 쓰지 않는다
+- l2 면 `<도구>/preflight.md` 의 레포 등록 확인 결과. 미등록이면 **등록 명령을 안내만 한다** — 사용자 앱의 상태를 바꾸는 일이라 adopt 가 치지 않는다
+- l2 면 **알림 한 번 시험** — `<도구>/notify.md` 의 보내는 명령을 사용자가 한 번 돌려 들리는지 본다
 - 공백·미확인으로 남긴 설계 항목(「확인 필요」)과 다음에 볼 곳
 - **커밋하지 않는다** — 사용자가 diff 를 보고 정한다. 요청받으면 그때 한다

@@ -6,6 +6,7 @@
 corral status --json                      # runtime.state·reachable·capabilities(명령 이름 목록)
 node .agents/harness/capability-check.mjs runtime --tool corral   # 매핑 요구 능력 ↔ 광고 대조
 corral agent-context --json               # 명령별 시그니처·주의사항 (--socket 거절)
+corral repo show --repo "path:$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")" --json   # 이 레포 등록 여부 — worktree 에서 쳐도 본체를 본다
 ```
 
 ### 보장 수준
@@ -20,6 +21,11 @@ PATH 와 다른 프로필(`--socket`·`--instance`)은 이 점검 밖이다. `st
   대체하지 않고 원인을 보고한다. `capabilities` 가 비어 오는 것은 **광고 부재**이지 통과가 아니다.
 - **부분 실패**: 광고에는 있는데 실제 호출이 거절되면 광고가 아니라 **실제 응답을 믿는다** — 거절 원문을 원자료로
   남기고 이 매핑을 고친다.
+- **레포 미등록**: `repo show` 가 exit 1 + `error.code: not_found` 면 이 레포가 corral 에 없다 — 첫 `corral terminal create` 가 같은 이유로 튕긴다.
+  멈추고 사용자에게 `corral repo add --path <본체 절대경로> --json` 을 보여 승인을 받는다. 승인 뒤 등록하고 이 점검을 다시 돈다.
+  등록은 사용자 앱의 사이드바를 바꾸고 corral 에 지우는 명령이 없다 — 묻지 않고 치지 않는다. 다른 오류를 미등록으로 읽지 않는다.
+  `git rev-parse` 가 실패한 자리(git 밖)의 `not_found` 는 미등록이 아니다 — 본체 checkout 안에서 다시 본다. 등록됐는데 `corral terminal create` 가 `not_found` 면 worktree 해소 문제다 — 거절 원문을 남기고 멈춘다.
+  `corral repo show` 는 `--socket` 을 거절한다 — 다른 프로필로 일하면 이 확인은 공백이고, 그 프로필의 첫 `terminal create` 거절이 근거다.
 - **복구**: 런타임이 꺼져 있으면 사용자가 데스크톱 앱을 띄운다. 런타임·backend 는
   `CLAUDE_CODE_*`·`CLAUDECODE`·`CLAUDE_PID`·`CLAUDE_EFFORT`·`ORCA_AGENT_HOOK_*` 를 **제거한 env** 로 띄운다.
   pane 이 backend 에서 env 를 상속하므로 마커가 남으면 provider 가 세션

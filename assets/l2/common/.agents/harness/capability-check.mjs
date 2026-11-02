@@ -306,7 +306,7 @@ const EXTERNAL = new Set([
   'node',              // 이 관문 자신을 부르는 줄 (`node .agents/harness/capability-check.mjs …`)
   'capability-check',  // 같은 것을 이름만으로 부르는 줄
   'claude', 'codex', 'grok',  // 에이전트 CLI (세션 기동 원자료 설명)
-  'jq', 'git', 'sh', 'shasum', 'osascript', 'export', 'command',
+  'jq', 'git', 'sh', 'shasum', 'osascript', 'afplay', 'export', 'command',
 ]);
 
 // 스팬 하나를 허용 목록에 비춰 본다. 반환: {kind, name?, msg?}

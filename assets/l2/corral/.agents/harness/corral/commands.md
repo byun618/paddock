@@ -12,6 +12,8 @@
 ```required-commands
 status                              # 『전제 점검』 — 런타임 생존·광고 명령 목록
 agent-context                       # 『전제 점검』 — 공개 계약(시그니처·주의사항). --socket 을 받지 않는다
+repo show                           # 『전제 점검』 — 이 레포가 등록됐는지 (terminal create 가 쓰는 path: 선택자)
+repo add                            # 『전제 점검』 — 사용자 승인 뒤 등록
 orchestration run-create            # 『제어 문맥 격리』
 orchestration run-use               # 『제어 문맥 격리』 — 복원
 orchestration run-current           # 『제어 문맥 격리』 — 복원 확인
@@ -31,14 +33,14 @@ orchestration worker-release        # 『회수·정리』 — 정리
 orchestration worker-stop           # 『회수·정리』 — 수렴하지 않는 시도 끝내기
 orchestration worker-abandon        # 『회수·정리』 — 아무 조치 없이 포기
 terminal create                     # 『세션 기동』
-terminal wait                       # 『준비 대기』
+terminal wait                       # 『준비 대기』·『게이트 알림』 대체 경로
 terminal prompt                     # 『본문 주입』 — 배달 증명
-terminal read                       # 『화면 관측』
+terminal read                       # 『화면 관측』·『게이트 알림』 대체 경로
 terminal show                       # 『세션 기동』 관측 — 실제 argv
 terminal list                       # 『회수·정리』 — 세션 목록
 terminal send                       # 『본문 주입』 우회 경로 (증명 없음 — 쓰지 않는다고 적기 위해 선언)
 terminal close                      # 『회수·정리』 — 빌린 pane 을 따로 닫는다
-terminal switch                     # 『세션 기동』 — 포커스 전환
+terminal switch                     # 『세션 기동』·『게이트 알림』 — 포커스 전환
 worktree set                        # 『감독 워커 기동』 — git 으로 만든 구현·리뷰 worktree 의 상위를 지정(표시용)
 ```
 
