@@ -20,7 +20,7 @@
 #   paddock-render version
 #       이 플러그인의 버전 (.claude-plugin/plugin.json)
 #
-# config.sh: PADDOCK_MODULES("l1 l2 bundle" 처럼 켠 모듈) · PADDOCK_HARNESS(bare|corral) · PADDOCK_SKIP(깔지 않을 경로) · 자산 변수들.
+# config.sh: PADDOCK_MODULES("l1 l2 bundle" 처럼 켠 모듈) · PADDOCK_HARNESS(bare|corral|orca) · PADDOCK_SKIP(깔지 않을 경로) · 자산 변수들.
 #   PADDOCK_VERSION 은 render 가 플러그인 버전으로 쓴다 — config 의 값은 지난 렌더의 버전일 뿐이다.
 # 종료코드: 0 성공 · 1 sync 쓰기 일부 실패 · 2 사용법/입력 오류 · 3 apply·sync 충돌 · 4 렌더 실패(미정의 변수·마커 오류)
 set -u

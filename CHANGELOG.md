@@ -4,6 +4,18 @@
 0.x 동안은 minor 가 깨는 변경을 포함할 수 있다.
 `### 재감사` 절은 대상 레포에서 판단이 필요한 변경(새 슬롯·새 변수·바뀐 원칙·바뀐 seed·이름 바뀜)만 적는다 — sync 스킬이 이 절을 읽는다.
 
+## [0.8.0] - 2026-11-02
+
+### Added
+
+- **L2 매핑 `orca`** — `PADDOCK_HARNESS=orca`. 보장 수준은 Orca 1.4.223 의 공개 계약을 읽은 결과다(요구 명령·기능 토큰은 실행 중인 앱과 대조, 워커 기동은 미실행). 본문 전달은 관측(`--wait-submit`·`--retry-request`), pane 세대는 공백, 완료 보고는 활성 시도 id 대조까지 증명
+- `capability-check runtime --tool orca` — 명령은 `agent-context` 레지스트리와, 기능 토큰은 `status` 광고와 대조. 시험용 `--registry`
+- adopt: 터미널 제어 도구 점검에 `orca`
+
+### 재감사
+
+- Orca 를 쓰는 레포: harness 를 `orca` 로 바꿀지 정한다(모듈·harness 변경은 sync). 바꾸면 앱을 띄운 상태에서 `capability-check runtime --tool orca` 를 돌린다
+
 ## [0.7.0] - 2026-11-02
 
 ### Added

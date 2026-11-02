@@ -16,7 +16,7 @@
 | 브랜치·PR 관례 | 기본 브랜치(`git symbolic-ref refs/remotes/origin/HEAD`), 최근 브랜치 이름 꼴(`git branch -r`), 일감 ID 꼴, PR 템플릿 |
 | 일감 트래커 | 브랜치·커밋의 ID 접두, 이슈 링크, MCP·CLI(gh 등) 사용 흔적. 사용자에게 확인 |
 | 에이전트 도구 | 지침 파일 종류(Claude Code·Codex·Cursor…), 사용자가 쓰는 도구 — 확인 |
-| 터미널 제어 도구 | `command -v corral tmux` · 사용자가 쓰는 것 확인 |
+| 터미널 제어 도구 | `command -v corral orca tmux` · 사용자가 쓰는 것 확인 |
 | git 훅 | `git config core.hooksPath`, `.husky/`·`.githooks/`·`.git/hooks/` 의 실행 파일, `command -v gitleaks` — paddock pre-commit 은 gitleaks 가 없으면 모든 커밋을 막는다 |
 
 ## 설계 항목
@@ -27,7 +27,7 @@
 | --- | --- | --- |
 | `l1` | 켬 | 사용자가 흐름 없이 L0 만 원함, 또는 산출물 레포를 둘 수 없음(`specs-inrepo` 미구현) |
 | `specs-repo` | `l1` 과 같이 켬 | — (v0 에서 l1 은 specs-repo 를 전제) |
-| `l2` + `PADDOCK_HARNESS` | 켬(`l1` 을 켤 때만 — l1 을 끄면 l2 도 끈다). `corral` 이 설치돼 있고 사용자가 쓰면 corral, 아니면 bare | 터미널 제어 없이 쓰겠다 → l2 끔(그러면 task 흐름의 워커 기동·완료 감지가 전부 공백이 된다고 알린다) |
+| `l2` + `PADDOCK_HARNESS` | 켬(`l1` 을 켤 때만 — l1 을 끄면 l2 도 끈다). `corral`·`orca` 중 설치돼 있고 사용자가 쓰는 것, 둘 다 있으면 사용자에게 묻는다. 없으면 bare | 터미널 제어 없이 쓰겠다 → l2 끔(그러면 task 흐름의 워커 기동·완료 감지가 전부 공백이 된다고 알린다) |
 | `bundle` | 끔 | 서로 의존하는 작업 묶음을 feature 브랜치로 모으는 관례가 있음 |
 | `l3` | 끔 | release 자산이 v0 에 없다 — 켜면 출고를 가리키는 문장만 남는다. 출고 흐름이 이미 있고 그 문서를 가리키고 싶을 때만 |
 

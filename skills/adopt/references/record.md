@@ -21,7 +21,7 @@ adopt 가 대상 레포에 남기는 설계 기록이다. 다음 재적용과 sy
 | 항목 | 값 | 근거 |
 | --- | --- | --- |
 | l1 | 켬 | 기본 |
-| harness | bare | corral 미설치 |
+| harness | bare | corral·orca 미설치 |
 | ISSUE_PREFIX | (빈 값) | 트래커 없음 — 사용자 확인 |
 | … | | |
 

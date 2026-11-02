@@ -11,7 +11,7 @@
 //     매핑의 능력 파일마다 명령 · 보장 수준 · 상황→행동(5항목)을 모두 갖는지. 공통부에 보장 요약 네 줄.
 //     **한계**: 라벨 존재 · "라벨만 있고 비었나" · 사유 없는 `해당 없음.` 까지만 본다. 적힌 내용이 그 상황에 맞는 행동인지,
 //     보장 수준 칸의 어휘가 실제 보장과 맞는지는 **기계가 보지 않는다 — 리뷰어가 본다.**
-//   node .agents/harness/capability-check.mjs runtime --tool corral|bare
+//   node .agents/harness/capability-check.mjs runtime --tool corral|orca|bare
 //     매핑이 **선언한** 명령(commands.md) ↔ 런타임이 광고하는 것 ↔ 매핑 본문(폴더의 모든 파일)이 실제로 쓰는 명령.
 //
 // ── 표기 허용 목록 (이 관문의 핵심) ───────────────────────────────────────────
@@ -20,7 +20,7 @@
 //
 //   A1. `<도구> [전역옵션…] <그룹> <명령> [플래그…]`      예: corral orchestration send --type …
 //   A2. `<도구> [전역옵션…] <명령> [플래그…]`             예: corral status --json
-//   A3. `node <경로>/corral.mjs …`                       → **도구 접두사로 정규화해 A1·A2 로 검사한다**
+//   A3. `node <경로>/corral.mjs …` · `…/orca.mjs …`      → **도구 접두사로 정규화해 A1·A2 로 검사한다**
 //       (매핑 스스로 권하는 대체 호출형이다. 정규화하지 않으면 이 표기로 쓴 오기가 조용히 지나간다)
 //   A4. `tmux [전역옵션…] <명령> [플래그…]`               bare 의 도구 표기. `-L`·`-S`·`-f` 는 전역옵션이다
 //   A5. `async_<이름>(…)`                                 iTerm2 Python API
@@ -54,10 +54,10 @@
 //
 // 종료 코드: 0 통과 · 1 불일치(멈춘다) · 2 사용법·읽기 오류 · 3 대조 불가(광고가 없는 도구)
 //   bare 는 규약·선언 검사를 **전부 돌린 뒤** 광고 대조만 공백이라 3 으로 끝난다. 규약을 어기면 1 이다.
-// 뒷문(양성 대조 전용): `--mapping <폴더>` 매핑 폴더 갈아끼우기 · `--advertised <경로>` 광고 목록 주입.
+// 뒷문(양성 대조 전용): `--mapping <폴더>` 매핑 폴더 갈아끼우기 · `--advertised <경로>` 광고 목록 주입 · `--registry <경로>` orca 레지스트리(agent-context JSON) 주입.
 // 프로필 선택: `--socket <경로>`·`--instance <id>` 를 주면 그 런타임에 그대로 넘긴다 —
 //   주지 않으면 기본 프로필을 본다. **다른 프로필을 쓰면서 이 관문을 기본으로 돌리면 쓰지 않는 런타임을 점검한다.**
-//   **corral 전용이다**: bare 는 런타임이 없다 — bare 에 주면 여기서 exit 2 로 거절한다.
+//   **corral 전용이다**: orca 는 두 인자를 받지 않고 bare 는 런타임이 없다 — 그 도구에 주면 여기서 exit 2 로 거절한다.
 
 import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
@@ -277,7 +277,7 @@ export function splitFences(text) {
 }
 
 
-// 도구별 어휘. corral 은 런타임이 알려 주고, bare 는 광고가 없으니 **선언이 어휘다**.
+// 도구별 어휘. corral·orca 는 런타임이 알려 주고, bare 는 광고가 없으니 **선언이 어휘다**.
 export function lexicon(tool, oracleNames) {
   const names = [...new Set(oracleNames)];
   const byLast = new Map();
@@ -296,10 +296,11 @@ export function lexicon(tool, oracleNames) {
 // 전역옵션: 값을 먹는 것과 안 먹는 것을 구분한다. 목록 밖 옵션이 명령 앞에 오면 오류.
 const GLOBAL_OPTS = {
   corral: { valued: ['--socket', '--instance', '--timeout-ms', '--request-id'], plain: ['--json'] },
+  orca: { valued: ['--timeout-ms', '--request-id', '--on'], plain: ['--json'] },
   tmux: { valued: ['-L', '-S', '-f'], plain: [] },
 };
 // 도구 CLI 를 다른 경로로 부르는 형태 (A3) — 도구 접두사로 정규화한다
-const TOOL_SCRIPT = /(?:^|\/)(corral)\.mjs$/;
+const TOOL_SCRIPT = /(?:^|\/)(corral|orca)\.mjs$/;
 // 매핑에 나와도 되는 외부 명령 (A7). **목록에 없는 첫 단어 + 플래그 = 오류다.**
 // 늘릴 때는 "매핑이 정말 그 명령을 적어야 하나" 를 먼저 묻는다.
 const EXTERNAL = new Set([
@@ -437,7 +438,7 @@ function run(cmd, args) {
 
 function checkRuntime() {
   const tool = flag('--tool');
-  if (tool !== 'corral' && tool !== 'bare') fail(2, 'runtime 모드는 --tool corral|bare 가 필요하다');
+  if (tool !== 'corral' && tool !== 'orca' && tool !== 'bare') fail(2, 'runtime 모드는 --tool corral|orca|bare 가 필요하다');
   const mappingPath = flag('--mapping') || join(HARNESS_DIR, tool);
   if (!existsSync(join(mappingPath, COMMON))) fail(2, `깔린 매핑이 아니다(${COMMON} 없음): ${mappingPath}`);
   const declText = readIn(mappingPath, DECL);
@@ -461,7 +462,7 @@ function checkRuntime() {
   // 선언은 commands.md 에서만 읽는다 — 다른 파일에 선언 블록이 있으면 그것은 선언이 아니다
   const decl = declaredBlock(declText, 'required-commands');
   const ment = declaredBlock(declText, 'mentioned-commands');
-  if (/```(required|mentioned)-commands\n/.test(mapping.replace(declText, ''))) {
+  if (/```(required-commands|mentioned-commands|required-tokens)\n/.test(mapping.replace(declText, ''))) {
     problems.push(`선언 블록은 ${DECL} 에만 둔다 — 다른 매핑 파일에 선언 블록이 있다`);
   }
   if (!decl.found) problems.push('```required-commands 선언 블록이 없다 (요구를 안 적었다)');
@@ -484,7 +485,13 @@ function checkRuntime() {
     if (advertised.size === 0) fail(2, `${tool} status --json 에 runtime.capabilities 가 없다`);
     note(`광고 출처: ${tool} status --json${profile.length ? ' ' + profile.join(' ') : ''} (실행)`);
   }
-  if (tool === 'corral') {
+  if (tool === 'orca') {
+    const regFile = flag('--registry');
+    const reg = JSON.parse(regFile ? readFileSync(regFile, 'utf8') : run(tool, ['agent-context', '--json']));
+    registry = new Set((reg.commands || []).map((c) => c.command));
+    if (registry.size === 0) fail(2, `${tool} agent-context --json 에 commands 가 없다`);
+    note(`명령 레지스트리 ${registry.size}개${regFile ? ` (주입: ${regFile})` : ''}`);
+  } else if (tool === 'corral') {
     registry = advertised; // corral 의 광고가 곧 명령 이름 집합이다
   } else {
     registry = declared; // bare
@@ -492,7 +499,7 @@ function checkRuntime() {
   if (advertised) note(`광고 ${advertised.size}개`);
 
   // (3) 표기 규약 + 본문이 쓰는 명령 수집
-  const prose = mapping.replace(/```required-commands\n[\s\S]*?```/g, '')
+  const prose = mapping.replace(/```required-(?:commands|tokens)\n[\s\S]*?```/g, '')
                        .replace(/```mentioned-commands\n[\s\S]*?```/g, '');
   const lex = lexicon(tool, [...registry]);
   const used = new Set();
@@ -538,13 +545,27 @@ function checkRuntime() {
   // (5) required ⊆ 광고/레지스트리 (R4). bare 는 대조할 광고가 없다
   if (tool !== 'bare') {
     for (const n of decl.entries) {
-      if (!registry.has(n)) problems.push(`광고에 없는 명령: ${tool} ${n}`);
+      if (!registry.has(n)) problems.push(`${tool === 'orca' ? '레지스트리' : '광고'}에 없는 명령: ${tool} ${n}`);
     }
   }
   // (6) 죽은 선언 (R5)
   for (const n of [...declared].sort()) {
     if (!used.has(n)) problems.push(`R5 위반 — 선언에만 있고 본문에 없는 명령: ${n}`);
   }
+  // (7) orca 기능 토큰 — orca 의 광고는 명령 이름이 아니라 기능 토큰이다
+  if (tool === 'orca') {
+    const tdecl = declaredBlock(declText, 'required-tokens');
+    if (!tdecl.found) problems.push('```required-tokens 선언 블록이 없다 (orca 의 광고는 기능 토큰이다)');
+    else if (tdecl.entries.length === 0) problems.push('```required-tokens 선언이 비어 있다');
+    note(`선언한 요구 기능 토큰 ${tdecl.entries.length}개`);
+    for (const t of tdecl.entries) if (!advertised.has(t)) problems.push(`광고에 없는 기능 토큰: ${t}`);
+    const proseTokens = new Set();
+    for (const m of prose.matchAll(/\b([a-z][a-z0-9-]*(?:\.[a-z0-9-]+)+\.v\d+)\b/g)) proseTokens.add(m[1]);
+    for (const t of [...proseTokens].sort()) {
+      if (!tdecl.entries.includes(t)) problems.push(`선언에 없는데 본문이 쓰는 기능 토큰: ${t}`);
+    }
+  }
+
   if (tool === 'bare') {
     if (problems.length > 0) verdict('runtime --tool bare');
     note('bare: 규약·선언·본문 세 방향은 돌렸다. **광고 대조만 불가**다 —');
@@ -562,5 +583,5 @@ if (invokedDirectly) {
   if (mode === 'names') checkNames();
   else if (mode === 'shape') checkShape();
   else if (mode === 'runtime') checkRuntime();
-  else fail(2, '사용법: capability-check.mjs names|shape|runtime [--tool corral|bare]');
+  else fail(2, '사용법: capability-check.mjs names|shape|runtime [--tool corral|orca|bare]');
 }

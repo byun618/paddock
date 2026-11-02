@@ -164,6 +164,35 @@ check "능력 파일이 선언 없는 명령을 씀 → runtime 1" '[ $rc = 1 ]'
 mut "$T/bare-r"; printf '\n```mentioned-commands\nkill-server   # 사유\n```\n' >> "$T/m/$H/bare/screen.md"; cc "$T/m" runtime --tool bare; rc=$?
 check "선언 블록을 commands.md 밖에 둠 → runtime 1" '[ $rc = 1 ]'
 
+echo "R9b orca 매핑 — 레지스트리·기능 토큰 대조 (앱 없이, 주입)"
+cfg "$T/orc.sh" "l1 l2 specs-repo"
+printf 'PADDOCK_HARNESS=orca\nISSUE_PREFIX=\nSPECS_ROOT=../demo-specs\nBASE_BRANCH=main\nBUNDLE_PREFIX=feature/\nMAX_FIX_ROUNDS=3\n' >> "$T/orc.sh"
+"$R" render --config "$T/orc.sh" --out "$T/orc" >/dev/null && mkdir -p "$T/orc-r" && "$R" apply "$T/orc" "$T/orc-r" >/dev/null; rc=$?
+check "orca 렌더·apply → exit 0, 매핑 폴더만" '[ $rc = 0 ] && [ -f "$T/orc-r/$H/orca/00-mapping.md" ] && [ ! -e "$T/orc-r/$H/corral" ] && [ ! -e "$T/orc-r/$H/bare" ]'
+cc "$T/orc-r" names; a=$?; cc "$T/orc-r" shape; b=$?
+check "기준선 orca → names·shape 0" '[ $a = 0 ] && [ $b = 0 ]'
+# 선언에서 만든 가짜 레지스트리·광고 — orca 가 없는 기계에서도 돈다
+node -e '
+const fs=require("fs");const t=fs.readFileSync(process.argv[1],"utf8");
+const block=(k)=>[...t.matchAll(new RegExp("```"+k+"\\n([\\s\\S]*?)```","g"))].flatMap((m)=>m[1].split("\n")).map((l)=>l.split("#")[0].trim()).filter(Boolean);
+fs.writeFileSync(process.argv[2],JSON.stringify({commands:[...block("required-commands"),...block("mentioned-commands").filter((n)=>n!=="terminal prompt")].map((command)=>({command}))}));
+fs.writeFileSync(process.argv[3],JSON.stringify(block("required-tokens")));
+' "$T/orc-r/$H/orca/commands.md" "$T/reg.json" "$T/adv.json"
+ocheck() { cc "$1" runtime --tool orca --advertised "${2:-$T/adv.json}" --registry "${3:-$T/reg.json}"; }
+ocheck "$T/orc-r"; rc=$?
+check "기준선 orca runtime → 0" '[ $rc = 0 ]'
+node -e 'const fs=require("fs");const r=JSON.parse(fs.readFileSync(process.argv[1]));r.commands=r.commands.filter((c)=>c.command!=="terminal send");fs.writeFileSync(process.argv[2],JSON.stringify(r))' "$T/reg.json" "$T/reg2.json"
+ocheck "$T/orc-r" "$T/adv.json" "$T/reg2.json"; rc=$?
+check "레지스트리에 없는 요구 명령 → runtime 1" '[ $rc = 1 ]'
+printf '["orchestration.contract.v1"]' > "$T/adv2.json"; ocheck "$T/orc-r" "$T/adv2.json"; rc=$?
+check "광고에 없는 기능 토큰 → runtime 1" '[ $rc = 1 ]'
+mut "$T/orc-r"; printf '\n`orchestration.unknown.v1`\n' >> "$T/m/$H/orca/screen.md"; ocheck "$T/m"; rc=$?
+check "선언 없는 기능 토큰을 본문이 씀 → runtime 1" '[ $rc = 1 ]'
+mut "$T/orc-r"; printf '\n```required-tokens\nx.y.v1 # 사유\n```\n' >> "$T/m/$H/orca/screen.md"; ocheck "$T/m"; rc=$?
+check "토큰 블록을 commands.md 밖에 둠 → runtime 1" '[ $rc = 1 ]'
+mut "$T/orc-r"; printf '\n`orca terminal prompt --terminal <h>`\n' >> "$T/m/$H/orca/inject.md"; ocheck "$T/m"; rc=$?
+check "mentioned 명령을 명령줄로 지시 → runtime 1" '[ $rc = 1 ]'
+
 echo "R10 PADDOCK_SKIP — 깔지 않기로 한 경로"
 cfg "$T/skip.sh" ""; printf 'PADDOCK_SKIP=".claude/agents .agents/agents"\n' >> "$T/skip.sh"
 "$R" render --config "$T/skip.sh" --out "$T/skip" >/dev/null; rc=$?

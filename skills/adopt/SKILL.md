@@ -49,7 +49,7 @@ paddock **버전 갱신**은 이 스킬이 아니라 `sync` 스킬이다.
 
 `design.md` 「분석」 표의 항목을 채운다 — 스택, 패키지 매니저, 빌드·실행·테스트·린트 명령(출처 파일과 함께), CI, 배포 산출물,
 사용자가 실제로 쓰는 실행 경로, 로컬 데이터·런타임 자원, 외부 의존(API·CLI), 이미 쓰는 에이전트 도구(Claude Code·Codex 등)와
-터미널 제어 도구(`corral`·`tmux` 실행 파일 유무), git 훅(`core.hooksPath`·husky·`gitleaks` 유무). 명령은 「있다고 적힌 것」과 「이 세션에서 돌려 본 것」을 구분해 적는다.
+터미널 제어 도구(`corral`·`orca`·`tmux` 실행 파일 유무), git 훅(`core.hooksPath`·husky·`gitleaks` 유무). 명령은 「있다고 적힌 것」과 「이 세션에서 돌려 본 것」을 구분해 적는다.
 
 ## 2. 설계
 
