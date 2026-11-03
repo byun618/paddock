@@ -41,9 +41,9 @@ paddock **버전 갱신**은 이 스킬이 아니라 `sync` 스킬이다.
 `audit.md` 를 따른다. 결과는 STAGE 의 `audit.md` 에 남긴다.
 
 1. 대상 = 현재 git 레포 루트(`git rev-parse --show-toplevel`). git 레포가 아니면 멈추고 묻는다. 작업 트리가 더럽면 멈추고 알린다 — 3단계의 변경이 한 덩어리 diff 로 보여야 한다
-2. 판정: `.paddock/config.sh` 있음 → **재적용** · 추적 파일이 거의 없음(README·LICENSE·설정 정도) → **신규** · 그 밖 → **기존**
-3. 기존 산출물 목록과 4분류(소개·규칙·절차·그대로), paddock 역할·스킬과의 재사용/확장/신규 판정
-4. STAGE 를 만든다: `STAGE=$(mktemp -d "${TMPDIR:-/tmp}/paddock-adopt.XXXXXX")`
+2. STAGE 를 만든다: `STAGE=$(mktemp -d "${TMPDIR:-/tmp}/paddock-adopt.XXXXXX")`
+3. 판정: `.paddock/config.sh` 있음 → **재적용** · 추적 파일이 거의 없음(README·LICENSE·설정 정도) → **신규** · 그 밖 → **기존**
+4. 기존 산출물 목록과 4분류(소개·규칙·절차·그대로), paddock 역할·스킬과의 재사용/확장/신규 판정, 기존 스킬의 산출물 경로, 기존 내용의 공개 위험
 
 ## 1. 분석
 
@@ -80,8 +80,11 @@ paddock-render apply "$STAGE/out" "<대상>" --dry-run   # exit 3 이면 충돌 
 3. 설계 슬롯마다 한두 줄 요약(D1·D3·D5…) + `defaults.md` 역할 표
 4. 생성할 파일 목록(manifest 기준 개수 + 주요 경로)
 5. **기존 파일 처리** — 파일·구간마다 「→ 목적지」, 바뀌는 기존 파일은 diff 요지. 그대로 두는 것도 적는다
-6. 원격 작업이 필요하면(specs 레포 생성 등) 따로 표시
-7. STAGE 경로 — 사용자가 초안 전문을 볼 수 있다
+6. **기존 스킬의 산출물 경로** — 스킬마다 칸 값, 레포 안이면 돌리기/그대로 제안 (`audit.md` 「산출물 경로」)
+7. **기존 내용의 공개 위험** — 레포 공개 여부, 파일:줄·종류, 고침/그대로 제안 (`audit.md` 「공개 위험」). 값은 적지 않는다. 토큰 모양은 보고 맨 위에도 — 폐기 답 전에는 3단계로 가지 않는다
+8. 원격 작업·specs 레포 — 필요한 작업(specs 레포 생성 등)과 specs 폴더 상태를 따로 표시. 없으면 없다고 적는다
+9. STAGE 경로 — 사용자가 초안 전문을 볼 수 있다
+10. **답할 것** — 1~9 의 본문에 적은 결정만, 그 항목 번호를 달아 적는다. 맨 위 경고에서 나온 결정도 맞는 항목 본문에 먼저 적는다(specs 레포 상태는 8). 번호를 달 수 없는 문장은 넣지 않는다. 결정할 것이 승인 여부뿐이면 그 한 줄만
 
 사용자가 고치라는 것을 반영해 2단계를 다시 하고 다시 보고한다. **승인 없이 3단계로 가지 않는다.**
 
@@ -95,6 +98,7 @@ paddock-render apply "$STAGE/out" "<대상>" --dry-run   # exit 3 이면 충돌 
    `.agents/defaults.md` 는 seed 라 파일째 쓴다. 다른 줄은 손대지 않는다
 4. 기존 내용 옮기기 — 옮기는 계획대로 STAGE 의 목적지 파일(슬롯 안·`rules/*.md`·`learnings/`·스킬)에 넣고,
    대상 레포의 충돌 파일은 계획대로 바꾼다(예: 기존 `CLAUDE.md` 를 지우고 렌더본으로, 기존 `.claude/skills/<x>` 를 `.agents/skills/<x>` 로 `git mv` 한 뒤 빈 `.claude/skills` 를 `rmdir`).
+   승인된 산출물 경로 돌리기·공개 위험 고침도 여기서 그 줄만 고친다.
    깔지 않기로 한 항목(서브에이전트 정의가 있는 `.claude/agents` 등)은 2단계에서 `PADDOCK_SKIP` 에 넣었어야 한다 — manifest 를 손으로 고치지 않는다(다음 sync 가 되살린다)
 5. `paddock-render apply "$STAGE/out" "<대상>"` — exit 3 이면 남은 충돌을 보고하고 멈춘다(덮어쓰지 않는다)
 6. `STAGE/design.md` 를 `<대상>/.paddock/design.md` 로 복사한다(변경 이력 표에 이번 적용 한 줄)
