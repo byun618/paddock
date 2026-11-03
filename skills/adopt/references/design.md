@@ -52,7 +52,7 @@
 | ID | 쓸 것 | 좋은 예 | 피할 것 |
 | --- | --- | --- | --- |
 | D1 | 무엇을 만드는가, 스택, 방향 문서 위치 (2~4줄) | 「X 를 위한 Y 앱. Next.js 15 + Prisma. 방향은 docs/vision.md」 | 폴더 트리 전체, 설치 방법 |
-| D3 | 일감 읽는 법·상태 전이 법·상태 이름. 트래커 없으면 「사용자 지시 원문을 00-analysis 첫 줄에 붙인다, 전이 없음」 | 「`gh issue view N`; 라벨 `in-progress`→`review`→close」 | 쓰지 않는 상태까지 나열 |
+| D3 | 일감 읽는 법·상태 전이 법·상태 이름·시작 때 상태. 트래커 없으면 「사용자 지시 원문을 00-analysis 첫 줄에 붙인다, 전이 없음」 | 「`gh issue view N`; 라벨 `in-progress`→`review`→close」 | 쓰지 않는 상태까지 나열, 코디의 전이 시점(원본은 task-coordinate §1·§4·§5 첫 줄) |
 | D5 | 네이티브 실행 = 사용자가 실제로 쓰는 경로에서 1회. 격리 실행과 무엇이 다른가 | 웹: 「`pnpm build && pnpm start` 의 프로덕션 빌드를 브라우저로」 · CLI: 「`npm i -g .` 뒤 전역 명령으로」 · 라이브러리: 「pack 한 tarball 을 빈 프로젝트에 설치해 import」 | 단위 테스트를 네이티브로 부르기 |
 | D6 | 건드리지 말 사용자 자원, 동시에 하나만 쓸 자원, 커밋하지 않을 사본 | 「로컬 개발 DB(`docker compose` 의 db) — 시험은 별도 DB 이름으로」 | 값(비밀) 적기 |
 | D7 | 빠른 확인(수 분) vs 최종 관문 명령 | 「빠른: `pnpm test:unit`, `pnpm lint` · 최종: `pnpm test:e2e` + D5」 | 없는 스크립트 |
