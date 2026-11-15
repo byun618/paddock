@@ -54,10 +54,7 @@ Last reviewed: YYYY-MM-DD
 - **90일 재검토는 파일 단위다** — `Last reviewed` 가 90일을 넘었거나 상한에 닿은 파일은 전체를 검토하고, 남긴 항목을 지금 코드·규칙과
   대조한 뒤 날짜를 갱신한다. 재검토 자리는 회고 절차가 정한다 — 그런 절차가 없으면 사용자가 요청할 때 한다. 작업 중에 낡은 파일을 보면 고치지 않고 알린다.
 <!-- paddock:module l1 -->
-- 채택·승격·재검토 = 머지 뒤 회고(task-close §5). 회고로 넘기는 법은 task-coordinate §8.
-<!-- /paddock:module -->
-<!-- paddock:module l3 -->
-- 출고를 쓰면 회고는 출고 회고(release §4)가 실린 일감을 모아 한다.
+- 채택·승격·재검토 = 머지 뒤 회고(task-close §5 — 출고 방식이 맡으면 task-close 머리 D17 이 가리키는 곳). 회고로 넘기는 법은 task-coordinate §8.
 <!-- /paddock:module -->
 - 영역 파일은 0개 항목까지 줄어도 된다. 「언젠가 쓸모 있을지 몰라서」 남기지 않는다.
 

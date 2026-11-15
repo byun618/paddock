@@ -11,10 +11,7 @@ description: >-
 전제: task-start 가 만든 작업 worktree(`{{WORKTREE_DIR}}/{{TASK_NAME}}/`, 작업 브랜치 체크아웃) 안이다.
 브랜치 규약·게이트 위치는 AGENTS.md, 역할별 모델·effort는 `.agents/defaults.md`, 리뷰어 전환 예외는 `.agents/defaults.rules.md`,
 완료 조건·네이티브 실행 관문은 `.agents/rules/validation.md`. **트래커를 쓰면 일감 상태 전이 시점은 이 문서 §1·§4·§5 첫 줄**(진행 중은 task-start).
-완료 전이는 머지 뒤 마무리(본체 세션의 `task-close`)가 한다.
-<!-- paddock:module l3 -->
-출고를 쓰면 release 가 한다.
-<!-- /paddock:module -->
+완료 전이는 머지 뒤 마무리(본체 세션의 `task-close` — 출고 방식이 맡으면 task-close 머리 D17 이 가리키는 곳)가 한다.
 문서 산출물·원자료는 전부 `{{SPECS_ROOT}}/{{TASK_NAME}}/`(절대경로)에 둔다(AGENTS.md 「산출물 규칙」).
 <!-- paddock:module specs-repo -->
 게이트 시점에 그 폴더만 커밋·push 한다. 작업 브랜치에는 코드만 들어간다.
@@ -78,10 +75,7 @@ description: >-
   산출물: `00-analysis.md` (+ 외부 서치 원문 `00-analysis-search.md`)
 - **learnings 를 골라 읽는다** — 코디가 이 분석에서 `.agents/learnings/` 를 README 「읽기」 대로 읽고, 맞는 항목을 `02-kickoff.md`
   제약에 인용한다.
-  인용한 항목은 회고(task-close §5)가 「작동했나」를 대조하는 대상이다.
-<!-- paddock:module l3 -->
-  출고를 쓰면 출고 회고(release §4)가 대조한다.
-<!-- /paddock:module -->
+  인용한 항목은 머지 뒤 회고(task-close §5)가 「작동했나」를 대조하는 대상이다.
 - 절차가 이 스킬과 어긋나면 `00-analysis.md` 의 "절차 어긋남" 섹션에 누적 기록한다 (스킬 개정 재료)
 
 ## 2. 판정 기준 — `01-criteria.md`
@@ -281,10 +275,7 @@ git merge <기록된_구현_브랜치>                      # 채택 구현 → 
   PR 에 싣지 않는다.
 <!-- /paddock:module -->
   채택 시점·방법은 `.agents/learnings/README.md`·`docs/adr/README.md` 를 따른다.
-  채택은 머지 뒤 회고(task-close §5)가 하고, 공개 파일·ADR 번호는 그때 생긴다.
-<!-- paddock:module l3 -->
-  출고를 쓰면 출고 회고(release §4)가 한다.
-<!-- /paddock:module -->
+  채택은 머지 뒤 회고(task-close §5 — 출고 방식이 맡으면 task-close 머리 D17 이 가리키는 곳)가 하고, 공개 파일·ADR 번호는 그때 생긴다.
   - **devlog** `devlog.md` — 한 파일, 날짜별 절(`## YYYY-MM-DD`). 날짜마다 두 절:
     **사람**(그날의 결정·승인·지시 원문 — LLM 초안이고 사용자가 고친다. 감정·의도를 추측해 쓰지 않는다) ·
     **LLM**(시도 → 실패 → 원인 → 해결).
@@ -317,9 +308,6 @@ git merge <기록된_구현_브랜치>                      # 채택 구현 → 
 <!-- /paddock:module -->
        검증한 구현 커밋, 채택·PR 생성 승인 근거,
        **머지 뒤 확인할 것**(이 변경으로 도는 CI·배포·마이그레이션과 확인 체크리스트 — task-close §3 이 읽는다)과 **필수 후속 항목**(task-close §4),
-<!-- paddock:module l3 -->
-       출고 때 본체 세션이 볼 사항,
-<!-- /paddock:module -->
        트래커 일감의 현재 상태와 다음 전이(트래커를 쓸 때). **일감은 완료로 바꾸지 않는다.**
      - **PR 원고 `{{SPECS_ROOT}}/{{TASK_NAME}}/pr.md`**:
 <!-- paddock:module bundle -->
@@ -330,9 +318,6 @@ git merge <기록된_구현_브랜치>                      # 채택 구현 → 
        나머지 = 본문: 왜(문제·증상) → 무엇을 바꿨나(사용자에게 보이는 변화 먼저, 구현 요점은 그 뒤) → 확인한 것(실제 실행 근거 한두 줄).
        리뷰 라운드·게이트·판정표 같은 내부 절차는 쓰지 않는다 — 판정문 위치는 스크립트가 붙인다.
        코드 레포가 공개될 수 있으므로 원자료 경로·내부 세션 정보를 본문에 옮기지 않는다.
-<!-- paddock:module l3 -->
-       출고 때 릴리즈 노트가 이 본문을 재료로 쓴다.
-<!-- /paddock:module -->
        원고가 없거나 첫 줄이 제목이 아니면 `task-pr.sh` 가 push 전에 멈춘다.
   2. **작업 worktree 에서 PR 을 연다.** `task-pr.sh` 는 레포를 git 공통 디렉터리에서 찾으므로 작업 worktree 의 사본으로 돌려도 본체 레포를 가리킨다.
      - `scripts/task-pr.sh {{TASK_NAME}}` — 미커밋 거절 → push → {{BASE_BRANCH}} 대상 PR 생성(있으면 재사용, 멱등).
@@ -356,16 +341,10 @@ git merge <기록된_구현_브랜치>                      # 채택 구현 → 
 <!-- paddock:module bundle -->
      묶음 자식은 PR 번호 대신 feature 반영 결과를 보고한다.
 <!-- /paddock:module -->
-<!-- paddock:module l3 -->
-     "출고 대기"를 덧붙인다. 열린 PR 이 3~4건을 넘거나 같은 파일을 건드리면 출고를 권한다.
-<!-- /paddock:module -->
      트래커의 일감 상태는 검증 중 그대로다. 머지는 본체 세션이 한다고 덧붙인다.
 - 스크립트가 실패하면 멈추고 원문을 보고한다. 이미 연 PR 은 `task-pr.sh` 재실행이 재사용하고, 남은 정리는 같은 명령으로 이어 간다(멱등).
 - 코디네이터가 직접 실행하는 것은 PR 생성과 정리까지다. **코디네이터는 머지하지 않는다** — 사용자가 이 pane 에서 머지·머지 뒤 확인을 지시하면
   하지 않고 「머지는 본체 세션에서 한다」고 답한다. 게이트 ② 의 PR 생성 승인은 머지 승인이 아니다.
-  본체 세션의 머지 뒤 마무리는 `task-close` 다(머지 확인·머지 뒤 확인·인계 항목·회고·완료·정리).
-<!-- paddock:module l3 -->
-  **출고**(release 브랜치에 PR 모으기·{{BASE_BRANCH}} 머지·태그·릴리즈 노트·일감 완료)는 본체 세션의 `release` 스킬 몫이다.
-<!-- /paddock:module -->
+  본체 세션의 머지 뒤 마무리는 `task-close` 다(머지 확인·머지 뒤 확인·인계 항목·회고·완료·정리 — 출고 방식이 맡는 단계는 D17 이 가리키는 곳).
 - 워커 pane 과 worktree 의 수명은 다르다 — worktree 는 PR 생성·정리까지 유지하고, pane 정리는 『회수·정리』를 따른다.
   빌린 pane 은 남으므로 따로 닫는다.

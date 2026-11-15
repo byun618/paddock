@@ -173,6 +173,3 @@ description: >-
 - 화면 읽기·목록·본문 길이의 **수치 상한은 매핑에서 확인한다** — 줄 수와 바이트를 혼동하면 원자료가 잘린다.
 - 시작 세션은 킥오프 전달 후 구현을 지휘하지 않는다. 이후 과정은 선택된 코디네이터가 맡고,
   PR 생성 승인 뒤 코디네이터가 PR 을 열고 정리까지 한다. 본체 세션은 머지 뒤 마무리(`task-close`) 때 돌아온다.
-<!-- paddock:module l3 -->
-  출고를 쓰면 출고(`release.sh` cut·gather·ship — release 스킬) 때 돌아온다(task-coordinate §8).
-<!-- /paddock:module -->

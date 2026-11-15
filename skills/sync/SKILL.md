@@ -61,7 +61,7 @@ paddock-render sync "$STAGE/out" "<대상>" --dry-run      # exit 3 = 충돌 있
 
 | 입력 | 반영안 |
 | --- | --- |
-| `새 슬롯 <파일> <ID>#<n>` | 슬롯 내용 초안 — adopt `design.md` 의 그 슬롯 설명대로, 대상 `.paddock/design.md` 의 분석·결정을 근거로 |
+| `새 슬롯 <파일> <ID>#<n>` | 슬롯 내용 초안 — adopt `design.md` 의 그 슬롯 설명대로, 대상 `.paddock/design.md` 의 분석·결정을 근거로. 출고(D17)는 찾은 지금 방식을 적거나 「없음」 — 방식을 새로 고르는 대화는 adopt 재적용 |
 | `seed 바뀜 <파일>` | `diff <대상 파일> "$STAGE/out/<파일>"` 에서 새 버전이 더한 규칙만 골라 「넣을지」 제안. 프로젝트가 쓴 줄은 건드리지 않는다 |
 | CHANGELOG `### 재감사` 항목 | 대상에서 해당하는 곳을 찾아(grep — 슬롯·rules·프로젝트 스킬·defaults) 고칠 안. 해당 없으면 「해당 없음」과 찾은 방법 |
 | 새 변수 | 값과 출처 |

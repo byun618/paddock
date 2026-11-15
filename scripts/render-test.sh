@@ -51,6 +51,8 @@ check "모듈 폴더 — bundle 끔이면 파일 없음" '[ -f "$T/m5/m.md" ] &&
 cfg "$T/c2.sh" "l1 bundle"
 "$T/fx/bin/paddock-render" render --config "$T/c2.sh" --out "$T/m4" >/dev/null
 check "모듈 폴더 — bundle 켬이면 파일 생김" '[ -f "$T/m4/x/only-bundle.md" ]'
+cfg "$T/c-l3.sh" "l3"; "$R" render --config "$T/c-l3.sh" --out "$T/l3" >/dev/null 2>&1; rc=$?
+check "지운 모듈 l3 가 config 에 남아도 렌더 exit 0, 출고 전제 문구 0" '[ $rc = 0 ] && ! grep -rqE "release §|release\\.sh|출고 회고" "$T/l3"'
 
 echo "R4 실패 — 미정의 변수·안 닫힌 모듈·빈 아닌 --out"
 printf '{{NOPE_VAR}}\n' > "$T/fx/assets/l0/v.md"

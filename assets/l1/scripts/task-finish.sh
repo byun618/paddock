@@ -71,7 +71,7 @@ has_remote() { [ -n "$(git -C "$REPO" ls-remote --heads origin "refs/heads/$1")"
 # 지우기는 검사한 값에 묶는다 — 로컬 묶음 브랜치는 update-ref 구 값 비교, 원격 묶음 브랜치는 --force-with-lease(검사 뒤 움직였으면 멈춘다).
 # 자식 = 묶음 브랜치가 아닌 로컬 브랜치·worktree 가운데 ⓐ upstream 이 origin/<묶음> 이거나(작업 시작 때 origin/<묶음> 에서 -b 로 따면
 # git 기본값으로 그렇게 된다) ⓑ 묶음 고유 커밋(<PR base>..<묶음> 의 가장 오래된 것)을 품은 것(push -u 로 upstream 이 바뀌었거나
-# --no-track·로컬 묶음 브랜치에서 딴 자식, 자식의 구현 변형, 브랜치 없는 worktree). 기본 브랜치·release/*·묶음 브랜치 접두는 세지 않는다 — 독립 작업은
+# --no-track·로컬 묶음 브랜치에서 딴 자식, 자식의 구현 변형, 브랜치 없는 worktree). 기본 브랜치·release/*(프로젝트가 출고에 release 브랜치를 쓸 때의 보호)·묶음 브랜치 접두는 세지 않는다 — 독립 작업은
 # 기본 브랜치에서 따서 ⓐⓑ 둘 다 없다. **한계**: upstream 이 origin/<묶음> 이 아니고(--no-track 으로 땄거나 뒤에 push -u 로 바뀜)
 # 묶음의 첫 고유 커밋보다 먼저 딴 자식은 못 센다 — 빈 묶음에서 딴 자식은 그 시점 기본 브랜치와 그래프가 같아 upstream·설정 말고 단서가 없다.
 # ⓐⓑ 는 origin/<묶음> 에서 딴 통합 확인용 throwaway 브랜치도 센다(안전 쪽 — 지우고 다시).

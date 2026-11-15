@@ -10,7 +10,6 @@ paddock 이 대상 레포에 복사하는 고정 뼈대다. 층·표기 규약·
 | L0 기본 | `l0/` | 항상 | AGENTS.md 지도 틀, CLAUDE.md, `.agents/` 원본 + `.claude/` 심링크, `.codex/agents/`, rules 스텁, learnings·ADR 형식, gitleaks 훅 |
 | L1 작업 흐름 | `l1/` (예정) | 기본 켬 | 게이트 흐름·판정표·리뷰어·에이전트 도구 가용성 확인·task 스킬(시작·진행·머지 뒤 마무리)과 스크립트 |
 | L2 harness | `l2/common/` + `l2/<도구>/` | 쓰는 도구 하나만 | 능력 계약(공통) + 도구 매핑 (아래 「L2 매핑 형식」) |
-| L3 출고 | `l3/` (예정) | 선택 | release 스킬·스크립트 |
 
 `l<층>/` 은 **대상 레포 루트를 그대로 비춘다** — `l0/.agents/rules/writing.md` 는 대상의 `.agents/rules/writing.md` 가 된다.
 역할마다 찍어내는 틀은 레포 루트 `templates/` 에 둔다.
@@ -38,7 +37,7 @@ paddock 이 대상 레포에 복사하는 고정 뼈대다. 층·표기 규약·
 | 마커가 하나도 없는 파일 | 고정과 같다 (front matter 처럼 첫 줄을 쓸 수 없는 파일) | 덮어쓴다 |
 | 첫 줄 `<!-- paddock:seed -->` | 처음 한 번만 깐다. 이후 내용은 프로젝트 소유 | 건드리지 않는다 |
 | `<!-- paddock:design <ID> -->` … `<!-- /paddock:design -->` | 설계 슬롯. adopt 가 대상 프로젝트를 보고 채운다 | 구간 안은 보존, 밖은 덮어쓴다 |
-| `<!-- paddock:module <이름> -->` … `<!-- /paddock:module -->` | 선택 모듈 구간. 이름은 `l1`·`l2`·`l3`·`bundle` 등 | 렌더할 때 켜면 안의 내용만 남기고(마커는 지운다), 끄면 구간째 뺀다 |
+| `<!-- paddock:module <이름> -->` … `<!-- /paddock:module -->` | 선택 모듈 구간. 이름은 `l1`·`l2`·`bundle` 등 | 렌더할 때 켜면 안의 내용만 남기고(마커는 지운다), 끄면 구간째 뺀다 |
 | `{{VAR}}` | 변수. 대문자 스네이크 | 렌더할 때 값으로 바꾼다 (LLM 판단 없음) |
 
 - 중첩은 한 겹만 허용한다: `module` 구간 안에 `design` 슬롯. 그 밖의 중첩(design 안의 무엇이든, module 안의 module)은 금지.
@@ -88,7 +87,6 @@ config 에만 있는 키 — 자산 문서에는 안 나오고 스크립트가 �
 | --- | --- | --- |
 | `l1` | 작업 흐름 — task 스킬·리뷰어·defaults·에이전트 도구 확인·판정표·task 스크립트 | 켬 |
 | `l2` | harness 능력 계약 + `PADDOCK_HARNESS` 매핑 하나. `l1` 을 전제한다(없으면 render 가 거절) | 켬 |
-| `l3` | 출고를 가리키는 문장 (release 자산은 v0 에 없음) | 끔 |
 | `specs-repo` | 작업 산출물을 별도 레포(`{{SPECS_ROOT}}`)에 두는 문장·점검 | 켬 |
 | `specs-inrepo` | 같은 레포 폴더 모드 — v0 미구현 | — |
 | `bundle` | 묶음(체크포인트·feature 브랜치·묶음 코디) | 끔 |
@@ -108,6 +106,7 @@ config 에만 있는 키 — 자산 문서에는 안 나오고 스크립트가 �
 | `D13` | task-coordinate §1 | 외부 서치 위임 — 도구·조건 (없으면 「없음」) |
 | `D15` | task-coordinate §8 | 통합 결과를 사용자가 직접 확인하는 방법 |
 | `D16` | task-close 3단계 | 머지 뒤 단계 — 표면별 빌드 게이트·자동 CI/배포 확인·수동 배포·마이그레이션·라이브 확인·프로젝트 함정, 단계마다 트리거(자동/사람)·되돌릴 수 없음 표시 |
+| `D17` | task-close 머리 | 사용자가 고른 출고 방식과 그 방식이 맡는 단계·위치. 고르지 않았으면 「없음」 |
 
 `.agents/defaults.md`(역할 기본값 표·선택 근거)는 슬롯이 아니라 seed 파일 통째로 adopt 가 쓴다.
 
@@ -173,7 +172,7 @@ manifest 종류: `fixed` · `seed` · `managed`(설계 슬롯이 있는 파일 �
 | `CLAUDE.md` | 고정 (`@AGENTS.md`) |
 | `.agents/rules/writing.md` · `coding.md` | seed |
 | `.agents/rules/validation.md` | 고정 + `l1` 구간 |
-| `.agents/learnings/README.md` | 고정 + `l1`·`l3` 구간 |
+| `.agents/learnings/README.md` | 고정 + `l1` 구간 |
 | `.agents/agents/` · `.agents/skills/` · `.codex/agents/` | 빈 폴더 |
 | `.claude/{agents,rules,skills}` | 심링크 |
 | `.githooks/pre-commit` | 고정 |

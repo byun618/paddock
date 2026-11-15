@@ -1,8 +1,8 @@
 # paddock — 공통 지침
 
-paddock 은 AI 작업 흐름(규칙·역할·스킬·게이트·harness 매핑·출고)을 프로젝트에 깔아 주는 Claude Code 플러그인이다.
+paddock 은 AI 작업 흐름(규칙·역할·스킬·게이트·harness 매핑)을 프로젝트에 깔아 주는 Claude Code 플러그인이다. 출고 방식은 정하지 않고 적용 때 옵션을 제안한다.
 `adopt` 스킬이 대상 코드베이스를 분석해 프로젝트별 설계를 쓰고, 고정 뼈대는 `assets/` 에서 그대로 복사한다.
-지금은 adopt·sync 와 L0·L1·L2 자산이 있다 — L3(출고)·specs-inrepo 는 아직 없다.
+지금은 adopt·sync 와 L0·L1·L2 자산이 있다 — specs-inrepo 는 아직 없다.
 
 ## 산출물
 

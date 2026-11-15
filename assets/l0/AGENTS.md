@@ -50,10 +50,6 @@
 | 7 사용자 확인 → **게이트 ②** = 기록·PR 생성·정리 | 코디 | devlog.md, learnings-proposal.md, adr-draft-*.md, handoff-main.md, pr.md | §8 |
 | 8 머지 뒤 마무리 — 머지(사용자 확인)·머지 뒤 확인·인계 항목·회고·완료·정리 | 본체 | close.md | task-close |
 <!-- /paddock:module -->
-<!-- paddock:module l3 -->
-
-출고 — release/vX.Y.Z 자르기·PR 모으기·통합 확인·회고 → {{BASE_BRANCH}} 머지·태그·릴리즈 노트·출고 산출물 (본체, release 스킬). 산출물은 GitHub Release 와 출고 회고(release §4)
-<!-- /paddock:module -->
 <!-- paddock:module bundle -->
 
 묶음(bundle)에서는 0 시작이 달라진다 — 체크포인트는 작업 브랜치 대신 `{{BUNDLE_PREFIX}}` 묶음 브랜치를 만들고, 묶음 자식의 시작은 묶음 코디가 한다. 묶음 자식은 pr.md 가 없다
@@ -61,9 +57,6 @@
 <!-- paddock:module l1 -->
 
 - 스킬 파일: .agents/skills/task-start · task-coordinate · task-close (각 SKILL.md). 역할별 도구·모델·effort·리뷰어 구성의 값은 .agents/defaults.md, 규칙은 .agents/defaults.rules.md, 도구별 가용성 확인 방법은 .agents/agent-tools.md
-<!-- /paddock:module -->
-<!-- paddock:module l3 -->
-- 출고 스킬: .agents/skills/release/SKILL.md
 <!-- /paddock:module -->
 <!-- paddock:module l1 -->
 - 판정 규칙(다수결 기각 금지·수렴 조건·수정 상한·테스트 계층·경량/전체 경로)은 task-coordinate §2·§3·§5·§6
@@ -86,12 +79,6 @@
 - **{{BASE_BRANCH}} 반영은 PR 머지로만** — {{BASE_BRANCH}} 직접 push 금지. PR 은 merge commit 으로 머지한다
   (squash·rebase 머지면 `scripts/task-finish.sh` 가 작업 브랜치를 자동 정리하지 않고 멈춘다)
 <!-- /paddock:module -->
-<!-- paddock:module l3 -->
-  웹 UI 로 머지하지 않는다 —
-  출고 때 scripts/release.sh 가 고른 PR 을 release 브랜치에 순서대로 모으고(검사 없이 순서 merge, 충돌이면 멈춤)
-  release → {{BASE_BRANCH}} PR 하나를 merge commit 으로 머지한다 — 원래 PR 이 간접 머지로 MERGED 인지 확인되지 않으면 멈춘다.
-  {{BASE_BRANCH}} 에 직접 올라가는 것은 release.sh 의 태그뿐이다
-<!-- /paddock:module -->
 <!-- paddock:module bundle -->
 - **묶음 브랜치 `{{BUNDLE_PREFIX}}{{BUNDLE_NAME}}`** (체크포인트 작업 이름): 서로 의존하는 작업 묶음만(체크포인트 시작 — task-coordinate references/bundle.md 2). 자식 작업 브랜치는 묶음 브랜치에서
   따고 묶음 브랜치로 로컬 merge, 묶음이 끝나면 묶음 브랜치 → {{BASE_BRANCH}} PR 하나. 기본 브랜치({{BASE_BRANCH}})가 움직이면 그 브랜치를 묶음 브랜치로 merge(rebase 금지 —
@@ -101,11 +88,6 @@
 - 슬러그는 일감 타이틀에서 자동 파생(케밥케이스 1~3단어), 생성 후 불변 (매핑은 키로만)
 - worktree 는 전부 {{WORKTREE_DIR}}/ 아래 형제 폴더 — 중첩 금지. 구현 브랜치 생존 중 작업 브랜치 rebase 금지
 - 통합 확인이 필요하면 throwaway: integration/<이름>-YYYYMMDD 에 합쳐 테스트 후 삭제. 유지 금지
-<!-- /paddock:module -->
-<!-- paddock:module l3 -->
-- **release 브랜치 release/vX.Y.Z** (예외, 단명 원칙 안): 출고 1회 수명·한 번에 하나. {{BASE_BRANCH}} 에서 자르고({{WORKTREE_DIR}}/release-vX.Y.Z)
-  PR 을 모아 통합 확인 뒤 {{BASE_BRANCH}} 머지, 출고 확인 뒤 삭제(접으면 삭제·PR 은 열린 채). 자른 뒤엔 출고를 막는 수정만 — 수정은 일감 브랜치에서 고쳐 다시 모은다(예외는 release 스킬 §1)
-- 출고 통합 확인은 release worktree 에서 한다 (위 throwaway 는 그 밖의 통합 확인)
 <!-- /paddock:module -->
 <!-- paddock:module bundle -->
 - 묶음 브랜치·예외적 장기 통합 브랜치는 만료일 명시(체크포인트 폴더 00-start.md), 넘기면 쪼개서 {{BASE_BRANCH}} 에

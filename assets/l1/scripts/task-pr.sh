@@ -134,11 +134,7 @@ BODY_FILE="$(mktemp)"; trap 'rm -f "$BODY_FILE"' EXIT
   else
     echo "- 판정문: \`$VERDICT\`"
   fi
-  if has_module l3; then
-    echo "- head \`$HEAD_BRANCH\` @ \`$(git -C "$REPO" rev-parse --short "$HEAD_BRANCH")\` → base \`$BASE\` — 머지는 출고(release) 흐름으로만 한다"
-  else
-    echo "- head \`$HEAD_BRANCH\` @ \`$(git -C "$REPO" rev-parse --short "$HEAD_BRANCH")\` → base \`$BASE\`"
-  fi
+  echo "- head \`$HEAD_BRANCH\` @ \`$(git -C "$REPO" rev-parse --short "$HEAD_BRANCH")\` → base \`$BASE\`"
   if [ -n "$PR_FOOTER" ]; then
     echo
     printf '%s\n' "$PR_FOOTER"
@@ -165,8 +161,4 @@ case "$HEAD_BRANCH" in
   "$BUNDLE_PREFIX"*) echo "□ 다음: PR 을 머지한 뒤 묶음 정리는 scripts/task-finish.sh $HEAD_BRANCH (묶음 worktree 밖, 본체 경로에서 — 묶음 코디의 마지막 실행). 남은 자식 worktree 가 있으면 멈춘다" ;;
   *) echo "□ 다음: PR 을 머지한 뒤 작업 정리는 scripts/task-finish.sh $HEAD_BRANCH (작업 worktree 밖에서)" ;;
 esac
-if has_module l3; then
-  echo "□ 머지는 이 스크립트가 하지 않는다 — 출고(release) 흐름에서 한다"
-else
-  echo "□ 머지와 머지 뒤 마무리(머지 뒤 확인·완료·정리)는 본체 세션의 task-close 가 한다 — 이 스크립트는 머지하지 않는다"
-fi
+echo "□ 머지와 머지 뒤 마무리(머지 뒤 확인·완료·정리)는 본체 세션의 task-close 가 한다 — 이 스크립트는 머지하지 않는다"
