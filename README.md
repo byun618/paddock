@@ -136,7 +136,7 @@ claude plugin install paddock@paddock
                 │
 리뷰어 세션    5 코드 리뷰       구현자와 별도 세션, 재리뷰도 새 세션
                 │
-코디네이터     6 판정           기준 대비 증거 ── ⛔ 게이트 ① 채택 승인
+코디네이터     6 판정·명세 확인  기준 대비 증거·명세와 함께 대조 ── ⛔ 게이트 ① 채택 승인
               7 사용자 확인     ── ⛔ 게이트 ② PR 생성 승인
                 │
 본체 세션     task-close     머지(사용자 확인 뒤)·머지 뒤 확인·회고·완료·정리
@@ -151,7 +151,7 @@ claude plugin install paddock@paddock
 
 ```
 00-start.md · 00-analysis.md · 01-criteria.md · 02-kickoff.md
-raw/review/ · reviews.md · verdict.md
+raw/review/ · reviews.md · verdict.md · spec-check.md
 devlog.md · learnings-proposal.md · adr-draft-*.md · handoff-main.md · pr.md · close.md
 ```
 

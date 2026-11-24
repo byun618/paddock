@@ -19,7 +19,7 @@ git 명령 블록은 그대로 쓴다. 아래의 SendMessage(세션 목록 ListA
 | --- | --- |
 | §0 실제 세션 확인 | 따른다 — `00-start.md` 는 체크포인트 폴더의 것 |
 | §1 분석 · §2 판정 기준 · §3 킥오프 · 게이트 ⓪ | **분해 전이면** 묶음 단위로 따른다(아래 2) — 분해가 끝났으면 하지 않는다 |
-| §4 구현 · §5 코드 리뷰 · §6 판정 · §7 게이트 ① | 하지 않는다 — 자식 코디 몫. 묶음 코디는 구현 워커·리뷰어를 띄우지 않는다 |
+| §4 구현 · §5 코드 리뷰 · §6 판정 · §7 게이트 ① | 하지 않는다 — 자식 코디 몫(§7 `spec-check.md` 는 자식 일감 원문을 명세로). 묶음 코디는 구현 워커·리뷰어를 띄우지 않는다 |
 | §8 게이트 ②·PR·정리 | 자식 몫은 자식 코디가 한다(`task-finish.sh --into`). 묶음 마무리는 아래 6 |
 | 경로(경량/전체) | 묶음에는 없다 — 자식마다 그 자식의 게이트 ⓪ 에서 정한다 |
 
@@ -97,8 +97,9 @@ git fetch origin {{BASE_BRANCH}} && git merge origin/{{BASE_BRANCH}} && git push
 자식 코디는 자기 정리(`task-finish.sh --into`)까지만 한다. 그 뒤는 묶음 코디다.
 
 1. 5 대로 feature worktree 를 올리고 **묶음 통합 확인** — 이 worktree 에서 빌드·실행해 `01-criteria.md` 의 묶음 기준을 확인하고
+   체크포인트 원문의 줄을 자식들의 `spec-check.md` 명세 대조와 맞춰 어느 자식도 맡지 않은 줄을 찾아 보고에 싣고,
    사용자에게 직접 실행·확인을 요청한다(실행 방법 한 줄 — task-coordinate §8 의 통합 결과 확인 방법).
-2. 묶음 폴더에 `verdict.md`(자식 판정 링크·묶음 확인 결과 — 판정표는 `.agents/rules/validation.md` 7칸)·`pr.md`(자식들을 묶어 task-coordinate §8 의 PR 원고 방식으로)·
+2. 묶음 폴더에 `verdict.md`(자식 판정·`spec-check.md` 링크·묶음 확인 결과 — 판정표는 `.agents/rules/validation.md` 7칸)·`pr.md`(자식들을 묶어 task-coordinate §8 의 PR 원고 방식으로)·
    `handoff-main.md`(PR base `{{BASE_BRANCH}}`, 실린 자식 일감, 트래커 다음 전이, **머지 뒤 확인할 것**·**필수 후속 항목** — 자식 인계 문서들의 것을 모아서. 본체의 task-close 3·4단계가 읽는다)를 쓴다.
 3. **⛔ PR 생성 승인 게이트** — 보고하고 멈춘다(PR 생성 전). 승인이 오면 묶음 폴더를 커밋하고
 <!-- paddock:module specs-repo -->

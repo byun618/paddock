@@ -46,7 +46,7 @@
 | 3 킥오프 → **게이트 ⓪** | 코디 | 02-kickoff.md | §3 |
 | 4 구현 — 단독 워커, 설계 단계 없음(경쟁은 옵션) | 워커 | 구현 브랜치 `{{TASK_NAME}}-<구현 도구>` | §4 |
 | 5 코드 리뷰 — 별도 세션, 재리뷰도 새 세션 | 리뷰어 | raw/review/, reviews.md | §5 |
-| 6 판정 → **게이트 ①** | 코디 | verdict.md | §6·§7 |
+| 6 판정 → 명세 확인 → **게이트 ①** | 코디·사용자 | verdict.md, spec-check.md | §6·§7 |
 | 7 사용자 확인 → **게이트 ②** = 기록·PR 생성·정리 | 코디 | devlog.md, learnings-proposal.md, adr-draft-*.md, handoff-main.md, pr.md | §8 |
 | 8 머지 뒤 마무리 — 머지(사용자 확인)·머지 뒤 확인·인계 항목·회고·완료·정리 | 본체 | close.md | task-close |
 <!-- /paddock:module -->
