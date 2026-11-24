@@ -26,13 +26,14 @@ corral 광고에는 worktree 계열 명령이 **있다**: `worktree create` · `
 git 명령으로 만든다. `worktree create` 로 만드는 길은 원자료가 없으니 여기서 짐작하지 않는다.
 
 **git 으로 만든 worktree 의 상위 표시.** git 으로 만든 worktree 는 레지스트리에 부모가 없어 사이드바에서
-다른 worktree 아래로 중첩되지 않는다. 중첩해 보이게 하고 싶을 때만, worktree 를 만든 직후 코디네이터가 한 번 친다:
+다른 worktree 아래로 중첩되지 않는다. 코디네이터가 구현·리뷰 worktree 를 만들면 만든 직후 **반드시** 한 번 친다
+(묶음 자식의 작업 worktree 는 아래 bundle 줄, 그 밖의 작업 worktree 는 루트):
 
 ```bash
 corral worktree set --worktree path:<구현 worktree 절대경로> --parent-worktree path:<작업 worktree 절대경로> --json
 ```
 
-- **bundle 을 쓸 때**: 묶음 자식의 작업 worktree 를 feature worktree 아래로 보이게 하려면 같은 명령을
+- **bundle 을 쓸 때**: 묶음 자식의 작업 worktree 는 feature worktree 가 있으면 그 아래로 둔다. 같은 명령을
   `--worktree path:<자식 작업 worktree>` `--parent-worktree path:<feature worktree>` 로 친다. 독립 작업은 상위를 지정하지 않는다(루트).
 - **리뷰 worktree 를 만드는 경우도 같은 규칙이다** — `--worktree path:<리뷰 worktree>` 로 바꿔 한 번 더 친다.
 - **실패는 경고만 남기고 워커 기동을 막지 않는다.** 부모는 사이드바 표시용 메타일 뿐 제어 순환(Task·Dispatch·완료 감지)은 이 값을

@@ -49,6 +49,10 @@ git -C "$REPO_ROOT" worktree add "$REPO_ROOT/{{WORKTREE_DIR}}/${TASK_BRANCH}${IM
 
    접미사는 `.paddock/config.sh` 의 `VARIANT_SUFFIXES` 중 하나여야 한다 — `task-finish.sh` 가 그 이름만 버려도 되는 변형으로 보고 정리한다.
 
+   **생성 직후 상위를 작업 worktree 로 지정한다** — 사이드바가 구현 worktree 를 작업 worktree 아래에 묶어 보이게 하는 표시용 메타다.
+   명령은 매핑의 「git 으로 만든 worktree 의 상위 표시」를 따른다. **실패는 경고만** — 거절 원문을 원자료에 남기고 진행한다.
+   그 능력이 없는 매핑이면 이 단계는 공백이다.
+
 2. 『제어 문맥 격리』를 먼저 정한다 — **내 작업의 기존 Run**(내가·내 세션이 이 일감으로 만든 것)을 우선 쓰고,
    없거나 **누구 것인지 모르면 새로 만들고 끝나면 복원한다.** **어느 명령에 Run을
    명시하는지는 매핑의 Run 명시 규칙을 따른다** — 받지 않는 명령에 붙이면 거절되는 도구가 있다.
@@ -97,6 +101,11 @@ git -C "$REPO_ROOT" worktree add "$REPO_ROOT/{{WORKTREE_DIR}}/${TASK_BRANCH}${IM
 - 사용자 확인용 worktree는 PR 생성 승인까지 유지한다 — 승인 뒤 코디네이터가 PR 을 연 뒤 같은 코디네이터가
   본체 경로에서 `scripts/task-finish.sh` 로 작업·구현 worktree 를 정리한다(작업 브랜치는 원격 PR head 로 남는다, SKILL §8).
   **pane 유지와 worktree 유지의 수명은 다르다.**
+- **리뷰 worktree 는 그 라운드 판정 뒤 바로 지운다** — 리뷰어는 제품 파일을 고치지 않는다. 보고서가 작업 폴더에 들어갔고,
+  그 리뷰어 시도의 회수가 끝나 그 worktree 에서 도는 pane·프로세스가 없음을 확인한 뒤 `git worktree remove`(`--force` 없이 —
+  거절되면 무엇이 남았는지 본다). pane 이 보존돼 남으면 지우지 않고 사유를 적은 뒤 작업 정리 전으로 미룬다.
+  판정 전에 끝난 리뷰(취소·중단·세션 소실)의 worktree 도 작업 정리(`task-finish.sh`) 전에 같은 확인으로 지운다 — 브랜치 없는
+  worktree 라 그 스크립트가 치우지 않고, 묶음 마감은 묶음 커밋을 품은 브랜치 없는 worktree 를 보면 멈춘다. 구현 worktree 에서 띄운 리뷰어는 지울 것이 없다.
 - **부하 장치·측정 프로세스는 띄운 쪽이 PID 를 기록하고 반드시 끈다** — 워커·리뷰어 모두. 인계 전 잔존 확인은
   이번 작업의 인스턴스만이 아니라 **부모가 init/launchd(PPID 1)로 바뀐 고아 프로세스**까지 본다(`ps -Ao pid,ppid,etime,command`) —
   남은 부하 장치가 뒤 작업의 측정을 오염시킨다.

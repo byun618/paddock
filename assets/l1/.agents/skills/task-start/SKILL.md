@@ -88,7 +88,7 @@ description: >-
 <!-- paddock:module bundle -->
    **묶음 자식이면 생성 직후 상위를 feature worktree 로 지정한다** — 사이드바가 체크포인트 아래에 중첩해 보이게 하는
    표시용 메타다. feature worktree(`{{WORKTREE_DIR}}/{{BUNDLE_NAME}}`)가 있을 때만 하고,
-   명령은 매핑의 「git 으로 만든 직후 상위를 지정한다」 줄을 따른다. **실패는 경고만** — 거절 원문을
+   명령은 매핑의 「git 으로 만든 worktree 의 상위 표시」를 따른다. **실패는 경고만** — 거절 원문을
    00-start 에 남기고 진행한다. 독립 작업은 루트로 둔다. 그 능력이 없는 매핑이면 이 단계는 공백이다.
 <!-- /paddock:module -->
    재개는 기존 worktree와 코디네이터 터미널을 확인한다. 활성 코디네이터가 있으면 그 세션으로
